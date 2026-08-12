@@ -1,16 +1,16 @@
 manifestVersion: 1
 id: "ausilio-cal-diy"
-name: "Cal.diy"
-tagline: "Open-source scheduling infrastructure"
-icon: "https://cal.com/favicon.ico"
 category: "productivity"
+name: "Cal.diy"
 version: "4.0.0"
-port: 18005
+tagline: "Open-source scheduling infrastructure"
 description: "Cal.diy is the community open-source edition of Cal.com for self-hosted appointment scheduling, calendar integrations, and booking workflows."
 developer: "Cal.com, Inc."
 website: "https://cal.diy"
 dependencies: []
 repo: "https://github.com/calcom/cal.diy"
 support: "https://github.com/calcom/cal.diy/issues"
+port: 18005
+path: ""
 submitter: "Ausilio"
 submissionDate: "2026-08-12"

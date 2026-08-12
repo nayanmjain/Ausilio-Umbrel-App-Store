@@ -1,16 +1,16 @@
 manifestVersion: 1
 id: "ausilio-dub"
-name: "Dub"
-tagline: "Open-source link management and shortener"
-icon: "https://dub.co/favicon.ico"
 category: "marketing"
+name: "Dub"
 version: "2.0.0"
-port: 18006
+tagline: "Open-source link management and shortener"
 description: "Dub.co is an open-source link management platform for creating, sharing, and tracking custom short links with powerful analytics."
 developer: "Dub.co"
 website: "https://dub.co"
 dependencies: []
 repo: "https://github.com/dubinc/dub"
 support: "https://github.com/dubinc/dub/issues"
+port: 18006
+path: ""
 submitter: "Ausilio"
 submissionDate: "2026-08-12"

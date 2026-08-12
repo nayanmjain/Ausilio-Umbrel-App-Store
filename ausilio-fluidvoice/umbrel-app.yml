@@ -1,16 +1,16 @@
 manifestVersion: 1
 id: "ausilio-fluidvoice"
-name: "FluidVoice"
-tagline: "Speech-to-text dictation & transcription service"
-icon: "https://github.com/altic-dev/FluidVoice/raw/main/assets/icon.png"
 category: "utilities"
+name: "FluidVoice"
 version: "1.6.1"
-port: 18004
+tagline: "Speech-to-text dictation & transcription service"
 description: "FluidVoice speech transcription backend utilizing local Whisper models for private, high-accuracy voice-to-text processing."
 developer: "ALTIC"
 website: "https://github.com/altic-dev/FluidVoice"
 dependencies: []
 repo: "https://github.com/altic-dev/FluidVoice"
 support: "https://github.com/altic-dev/FluidVoice/issues"
+port: 18004
+path: ""
 submitter: "Ausilio"
 submissionDate: "2026-08-12"
