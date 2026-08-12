@@ -1,0 +1,23 @@
+version: "3.7"
+
+services:
+  app:
+    image: appflowyinc/appflowy_cloud:v0.7.2
+    restart: on-failure
+    ports:
+      - "${APP_PORT}:8000"
+    environment:
+      - APPFLOWY_DATABASE_URL=postgres://appflowy:appflowy_pass@db:5432/appflowy
+      - APPFLOWY_ENVIRONMENT=production
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=appflowy
+      - POSTGRES_PASSWORD=appflowy_pass
+      - POSTGRES_DB=appflowy
+    volumes:
+      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data

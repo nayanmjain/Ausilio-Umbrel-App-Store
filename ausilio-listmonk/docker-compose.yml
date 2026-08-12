@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  app:
+    image: listmonk/listmonk:latest
+    restart: on-failure
+    ports:
+      - "${APP_PORT}:9001"
+    environment:
+      - LISTMONK_db__host=db
+      - LISTMONK_db__port=5432
+      - LISTMONK_db__user=listmonk
+      - LISTMONK_db__password=listmonk_pass
+      - LISTMONK_db__database=listmonk
+      - LISTMONK_db__ssl_mode=disable
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=listmonk
+      - POSTGRES_PASSWORD=listmonk_pass
+      - POSTGRES_DB=listmonk
+    volumes:
+      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data
