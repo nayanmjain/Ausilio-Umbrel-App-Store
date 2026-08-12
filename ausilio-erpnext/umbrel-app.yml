@@ -1,16 +1,19 @@
 manifestVersion: 1
-id: "ausilio-erpnext"
-category: "business"
-name: "ERPNext"
+id: ausilio-erpnext
+name: ERPNext
+category: business
 version: "15.0.0"
-tagline: "Open-source Enterprise Resource Planning system"
-description: "ERPNext is a comprehensive open-source ERP system covering accounting, CRM, HR, payroll, manufacturing, inventory management, and sales."
-developer: "Frappe Technologies"
-website: "https://erpnext.com"
+tagline: Open Source ERP for small and medium businesses
+description: Complete enterprise resource planning tool covering accounting, CRM, inventory management, HR, and payroll.
+developer: Frappe Technologies
+website: https://erpnext.com
 dependencies: []
-repo: "https://github.com/frappe/erpnext"
-support: "https://discuss.frappe.io"
-port: 18002
+repo: https://github.com/frappe/erpnext
+support: https://github.com/frappe/erpnext/issues
+port: 8087
+gallery:
+  - 1.png
 path: ""
-submitter: "Ausilio"
-submissionDate: "2026-08-12"
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-03-01"

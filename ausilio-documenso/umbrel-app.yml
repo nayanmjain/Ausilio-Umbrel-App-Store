@@ -1,16 +1,19 @@
 manifestVersion: 1
-id: "ausilio-documenso"
-category: "business"
-name: "Documenso"
-version: "1.6.0"
-tagline: "Open-source document signing platform"
-description: "Documenso is the open-source alternative to DocuSign. Sign, send, and track documents securely with full control over your signing infrastructure."
-developer: "Documenso"
-website: "https://documenso.com"
+id: ausilio-documenso
+name: Documenso
+category: productivity
+version: "1.5.0"
+tagline: Open Source DocuSign Alternative
+description: Documenso allows you to sign documents digitally, request signatures, and manage document workflows with full data ownership.
+developer: Documenso
+website: https://documenso.com
 dependencies: []
-repo: "https://github.com/documenso/documenso"
-support: "https://github.com/documenso/documenso/issues"
-port: 18003
+repo: https://github.com/documenso/documenso
+support: https://github.com/documenso/documenso/issues
+port: 8085
+gallery:
+  - 1.png
 path: ""
-submitter: "Ausilio"
-submissionDate: "2026-08-12"
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-03-01"

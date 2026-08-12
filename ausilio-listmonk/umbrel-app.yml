@@ -1,16 +1,19 @@
 manifestVersion: 1
-id: "ausilio-listmonk"
-category: "communication"
-name: "Listmonk"
+id: ausilio-listmonk
+name: Listmonk
+category: utilities
 version: "3.0.0"
-tagline: "Self-hosted newsletter and mailing list manager"
-description: "Listmonk is a high-performance, self-hosted newsletter and mailing list manager packed with features for managing subscribers, lists, and email campaigns."
-developer: "Kailash Nadh"
-website: "https://listmonk.app"
+tagline: High-performance self-hosted newsletter manager
+description: Listmonk is a standalone, self-hosted newsletter and mailing list manager with high performance and low memory footprint.
+developer: knadh
+website: https://listmonk.app
 dependencies: []
-repo: "https://github.com/knadh/listmonk"
-support: "https://github.com/knadh/listmonk/issues"
-port: 18007
+repo: https://github.com/knadh/listmonk
+support: https://github.com/knadh/listmonk/issues
+port: 8084
+gallery:
+  - 1.png
 path: ""
-submitter: "Ausilio"
-submissionDate: "2026-08-12"
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-03-01"

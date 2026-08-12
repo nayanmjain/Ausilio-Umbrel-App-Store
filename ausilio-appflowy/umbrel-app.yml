@@ -1,16 +1,19 @@
 manifestVersion: 1
-id: "ausilio-appflowy"
-category: "productivity"
-name: "AppFlowy"
-version: "0.7.2"
-tagline: "Open-source alternative to Notion"
-description: "AppFlowy is an open-source alternative to Notion. Bring projects, wikis, and team knowledge into one customizable platform."
-developer: "AppFlowy"
-website: "https://appflowy.io"
+id: ausilio-appflowy
+name: AppFlowy
+category: productivity
+version: "0.6.7"
+tagline: Open-source alternative to Notion
+description: AppFlowy is an open-source workspace that lets you write, plan, and organize in one place without losing control of your data.
+developer: AppFlowy
+website: https://appflowy.io
 dependencies: []
-repo: "https://github.com/AppFlowy-IO/AppFlowy"
-support: "https://github.com/AppFlowy-IO/AppFlowy/issues"
-port: 18001
+repo: https://github.com/AppFlowy-IO/AppFlowy
+support: https://github.com/AppFlowy-IO/AppFlowy/issues
+port: 8081
+gallery:
+  - 1.png
 path: ""
-submitter: "Ausilio"
-submissionDate: "2026-08-12"
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-03-01"

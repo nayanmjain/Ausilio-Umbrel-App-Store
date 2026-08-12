@@ -1,9 +1,15 @@
+version: "3.7"
+
 services:
-  app:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-listmonk_web_1
+      APP_PORT: 9000
+      PROXY_AUTH_ADD: "false"
+
+  web:
     image: listmonk/listmonk:latest
     restart: on-failure
-    ports:
-      - "${APP_PORT}:9001"
     environment:
       - LISTMONK_db__host=db
       - LISTMONK_db__port=5432
@@ -13,6 +19,8 @@ services:
       - LISTMONK_db__ssl_mode=disable
     depends_on:
       - db
+    volumes:
+      - ${APP_DATA_DIR}/data:/listmonk/data
 
   db:
     image: postgres:15-alpine
@@ -22,4 +30,4 @@ services:
       - POSTGRES_PASSWORD=listmonk_pass
       - POSTGRES_DB=listmonk
     volumes:
-      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data
+      - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data

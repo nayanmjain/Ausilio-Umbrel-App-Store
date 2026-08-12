@@ -1,14 +1,19 @@
+version: "3.7"
+
 services:
-  app:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-cal-diy_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
     image: calcom/cal.com:latest
     restart: on-failure
-    ports:
-      - "${APP_PORT}:3000"
     environment:
-      - DATABASE_URL=postgresql://calcom:calcom_pass@db:5432/calcom
-      - NEXTAUTH_SECRET=calcom_secret_key_12345
-      - CALENDSO_ENCRYPTION_KEY=calcom_encryption_key_12345
-      - NEXT_PUBLIC_WEBAPP_URL=http://localhost:${APP_PORT}
+      - PORT=3000
+      - DATABASE_URL=postgresql://calcom:calcom_password@db:5432/calcom
+      - NEXTAUTH_SECRET=secret_key_change_me
     depends_on:
       - db
 
@@ -17,7 +22,7 @@ services:
     restart: on-failure
     environment:
       - POSTGRES_USER=calcom
-      - POSTGRES_PASSWORD=calcom_pass
+      - POSTGRES_PASSWORD=calcom_password
       - POSTGRES_DB=calcom
     volumes:
-      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data
+      - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data

@@ -1,14 +1,19 @@
+version: "3.7"
+
 services:
-  app:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-documenso_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
     image: documenso/documenso:latest
     restart: on-failure
-    ports:
-      - "${APP_PORT}:3000"
     environment:
-      - NEXTAUTH_URL=http://localhost:${APP_PORT}
-      - NEXTAUTH_SECRET=documenso_secret_key_change_me
+      - PORT=3000
+      - NEXTAUTH_URL=http://${DEVICE_DOMAIN_NAME}:8085
       - DATABASE_URL=postgresql://documenso:documenso_pass@db:5432/documenso
-      - DOCUMENSO_DISABLE_TELEMETRY=true
     depends_on:
       - db
 
@@ -20,4 +25,4 @@ services:
       - POSTGRES_PASSWORD=documenso_pass
       - POSTGRES_DB=documenso
     volumes:
-      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data
+      - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data

@@ -1,31 +1,39 @@
+version: "3.7"
+
 services:
-  app:
-    image: frappe/erpnext:v15.0.0
-    restart: on-failure
-    ports:
-      - "${APP_PORT}:8080"
+  app_proxy:
     environment:
-      - DB_HOST=db
-      - DB_PORT=3306
-      - MYSQL_ROOT_PASSWORD=erpnext_db_pass
-      - MARIADB_ROOT_PASSWORD=erpnext_db_pass
+      APP_HOST: ausilio-erpnext_web_1
+      APP_PORT: 8080
+      PROXY_AUTH_ADD: "false"
+
+  web:
+    image: frappe/erpnext:v15.11.0
+    restart: on-failure
+    environment:
+      - BACKEND=backend:8000
+      - FRAPPE_SITE_NAME_HEADER=frontend
+      - SOCKETIO_PORT=9000
     depends_on:
       - db
-      - redis
+      - redis-cache
+      - redis-queue
 
   db:
-    image: mariadb:10.6
+    image: mariadb:10.11
     restart: on-failure
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     environment:
-      - MYSQL_ROOT_PASSWORD=erpnext_db_pass
+      - MARIADB_ROOT_PASSWORD=erpnext_root_pass
     volumes:
-      - ${APP_DATA_DIR}/data/db:/var/lib/mysql
+      - ${APP_DATA_DIR}/db_data:/var/lib/mysql
 
-  redis:
-    image: redis:alpine
+  redis-cache:
+    image: redis:7-alpine
     restart: on-failure
-    volumes:
-      - ${APP_DATA_DIR}/data/redis:/data
+
+  redis-queue:
+    image: redis:7-alpine
+    restart: on-failure

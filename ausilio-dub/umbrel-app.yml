@@ -1,16 +1,19 @@
 manifestVersion: 1
-id: "ausilio-dub"
-category: "marketing"
-name: "Dub"
+id: ausilio-dub
+name: Dub
+category: utilities
 version: "2.0.0"
-tagline: "Open-source link management and shortener"
-description: "Dub.co is an open-source link management platform for creating, sharing, and tracking custom short links with powerful analytics."
-developer: "Dub.co"
-website: "https://dub.co"
+tagline: Open-source link management platform
+description: Dub is an open-source link management engine to create, track, and optimize short links.
+developer: Dub Technologies, Inc.
+website: https://dub.co
 dependencies: []
-repo: "https://github.com/dubinc/dub"
-support: "https://github.com/dubinc/dub/issues"
-port: 18006
+repo: https://github.com/dubinc/dub
+support: https://github.com/dubinc/dub/issues
+port: 8086
+gallery:
+  - 1.png
 path: ""
-submitter: "Ausilio"
-submissionDate: "2026-08-12"
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-03-01"

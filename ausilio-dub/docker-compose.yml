@@ -1,30 +1,17 @@
+version: "3.7"
+
 services:
-  app:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-dub_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
     image: dubco/dub:latest
     restart: on-failure
-    ports:
-      - "${APP_PORT}:3000"
     environment:
-      - DATABASE_URL=postgresql://dub:dub_pass@db:5432/dub
-      - NEXTAUTH_SECRET=dub_secret_key_67890
-      - REDIS_URL=redis://redis:6379
-      - NEXT_PUBLIC_APP_URL=http://localhost:${APP_PORT}
-    depends_on:
-      - db
-      - redis
-
-  db:
-    image: postgres:15-alpine
-    restart: on-failure
-    environment:
-      - POSTGRES_USER=dub
-      - POSTGRES_PASSWORD=dub_pass
-      - POSTGRES_DB=dub
+      - PORT=3000
+      - NEXTAUTH_URL=http://${DEVICE_DOMAIN_NAME}:8086
     volumes:
-      - ${APP_DATA_DIR}/data/db:/var/lib/postgresql/data
-
-  redis:
-    image: redis:alpine
-    restart: on-failure
-    volumes:
-      - ${APP_DATA_DIR}/data/redis:/data
+      - ${APP_DATA_DIR}/data:/app/data
