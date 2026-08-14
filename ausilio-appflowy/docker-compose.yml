@@ -19,8 +19,6 @@ services:
         condition: service_healthy
       appflowy_web:
         condition: service_started
-      admin_frontend:
-        condition: service_healthy
       minio:
         condition: service_healthy
 
@@ -32,10 +30,10 @@ services:
       - MINIO_ROOT_USER=${APP_PASSWORD}
       - MINIO_ROOT_PASSWORD=${APP_PASSWORD}
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
       start_period: 20s
     volumes:
       - ${APP_DATA_DIR}/minio_data:/data
@@ -61,7 +59,7 @@ services:
     restart: on-failure
 
   gotrue:
-    image: appflowyinc/gotrue:0.17.12-arm64v8
+    image: appflowyinc/gotrue:0.17.12
     restart: on-failure
     depends_on:
       postgres:
@@ -94,7 +92,7 @@ services:
       - GOTRUE_RATE_LIMIT_EMAIL_SENT=100
 
   appflowy_cloud:
-    image: appflowyinc/appflowy_cloud:0.17.11-arm64v8
+    image: appflowyinc/appflowy_cloud:0.17.11
     restart: on-failure
     depends_on:
       gotrue:
@@ -144,25 +142,19 @@ services:
       - GUEST_INVITES_REQUIRE_ADMIN_APPROVAL=false
 
   admin_frontend:
-    image: appflowyinc/admin_frontend:0.17.13-arm64v8
+    image: appflowyinc/admin_frontend:0.17.13
     restart: on-failure
     depends_on:
       gotrue:
         condition: service_healthy
       appflowy_cloud:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/ || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 40s
     environment:
       - APPFLOWY_GOTRUE_BASE_URL=http://gotrue:9999
       - APPFLOWY_BASE_URL=http://appflowy_cloud:8000
 
   appflowy_worker:
-    image: appflowyinc/appflowy_worker:0.17.11-arm64v8
+    image: appflowyinc/appflowy_worker:0.17.11
     restart: on-failure
     depends_on:
       postgres:
@@ -193,7 +185,7 @@ services:
       - APPFLOWY_MAILER_SMTP_TLS_KIND=
 
   appflowy_web:
-    image: appflowyinc/appflowy_web:0.16.15-arm64v8
+    image: appflowyinc/appflowy_web:0.16.15
     restart: on-failure
     depends_on:
       appflowy_cloud:
