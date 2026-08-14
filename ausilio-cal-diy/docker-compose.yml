@@ -8,21 +8,34 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: calcom/cal.com:latest
+    image: calcom/cal.com:v6.2.0-arm
     restart: on-failure
     environment:
-      - PORT=3000
-      - DATABASE_URL=postgresql://calcom:calcom_password@db:5432/calcom
-      - NEXTAUTH_SECRET=secret_key_change_me
+      - NODE_ENV=production
+      - DATABASE_HOST=db:5432
+      - DATABASE_URL=postgresql://calcom:${APP_PASSWORD}@db:5432/calcom
+      - DATABASE_DIRECT_URL=postgresql://calcom:${APP_PASSWORD}@db:5432/calcom
+      - NEXTAUTH_SECRET=${APP_PASSWORD}
+      - CALENDSO_ENCRYPTION_KEY=${APP_PASSWORD}
+      - NEXT_PUBLIC_WEBAPP_URL=http://${DEVICE_DOMAIN_NAME}:8083
+      - NEXT_PUBLIC_API_V2_URL=http://${DEVICE_DOMAIN_NAME}:8083/api/v2
+      - NEXT_PUBLIC_LICENSE_CONSENT=1
+      - CALCOM_TELEMETRY_DISABLED=1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
     restart: on-failure
     environment:
       - POSTGRES_USER=calcom
-      - POSTGRES_PASSWORD=calcom_password
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
       - POSTGRES_DB=calcom
     volumes:
       - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calcom"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

@@ -8,21 +8,37 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: documenso/documenso:latest
+    image: documenso/documenso:v2.16.0
     restart: on-failure
     environment:
       - PORT=3000
-      - NEXTAUTH_URL=http://${DEVICE_DOMAIN_NAME}:8085
-      - DATABASE_URL=postgresql://documenso:documenso_pass@db:5432/documenso
+      - NODE_ENV=production
+      - NEXTAUTH_SECRET=${APP_PASSWORD}
+      - NEXT_PRIVATE_ENCRYPTION_KEY=${APP_PASSWORD}
+      - NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY=${APP_PASSWORD}
+      - NEXT_PUBLIC_WEBAPP_URL=http://${DEVICE_DOMAIN_NAME}:8085
+      - NEXT_PRIVATE_INTERNAL_WEBAPP_URL=http://localhost:3000
+      - NEXT_PRIVATE_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
+      - NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
+      - NEXT_PRIVATE_SMTP_TRANSPORT=console
+      - NEXT_PRIVATE_SMTP_FROM_NAME=Documenso
+      - NEXT_PRIVATE_SMTP_FROM_ADDRESS=no-reply@${DEVICE_DOMAIN_NAME}
+      - NEXT_PUBLIC_DOCUMENT_SIZE_UPLOAD_LIMIT=52428800
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
     restart: on-failure
     environment:
       - POSTGRES_USER=documenso
-      - POSTGRES_PASSWORD=documenso_pass
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
       - POSTGRES_DB=documenso
     volumes:
       - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U documenso"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

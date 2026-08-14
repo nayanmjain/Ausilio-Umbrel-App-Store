@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-documenso
 name: Documenso
 category: productivity
-version: "1.5.0"
+version: "2.16.0"
 tagline: Open Source DocuSign Alternative
 description: Documenso allows you to sign documents digitally, request signatures, and manage document workflows with full data ownership.
 developer: Documenso
@@ -11,6 +11,7 @@ dependencies: []
 repo: https://github.com/documenso/documenso
 support: https://github.com/documenso/documenso/issues
 port: 8085
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/documenso.png
 gallery:
   - 1.png
 path: ""

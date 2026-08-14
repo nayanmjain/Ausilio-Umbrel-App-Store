@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-cal-diy
 name: Cal.com (DIY)
 category: productivity
-version: "4.0.0"
+version: "6.2.0"
 tagline: Open-source scheduling infrastructure
 description: Cal.com is an open-source scheduling tool that helps you manage appointments and meetings seamlessly.
 developer: Cal.com, Inc.
@@ -11,6 +11,7 @@ dependencies: []
 repo: https://github.com/calcom/cal.com
 support: https://github.com/calcom/cal.com/issues
 port: 8083
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/cal-com.png
 gallery:
   - 1.png
 path: ""

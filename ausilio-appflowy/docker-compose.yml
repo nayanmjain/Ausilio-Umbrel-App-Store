@@ -3,15 +3,202 @@ version: "3.7"
 services:
   app_proxy:
     environment:
-      APP_HOST: ausilio-appflowy_web_1
+      APP_HOST: ausilio-appflowy_nginx_1
       APP_PORT: 80
       PROXY_AUTH_ADD: "false"
 
-  web:
-    image: appflowyio/appflowy_cloud:latest
+  nginx:
+    image: nginx:1.27-alpine
     restart: on-failure
-    environment:
-      - PORT=80
-      - APP_ENVIRONMENT=production
     volumes:
-      - ${APP_DATA_DIR}/data:/app/data
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      appflowy_cloud:
+        condition: service_healthy
+      gotrue:
+        condition: service_healthy
+      appflowy_web:
+        condition: service_started
+      admin_frontend:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  minio:
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z
+    restart: on-failure
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${APP_PASSWORD}
+      - MINIO_ROOT_PASSWORD=${APP_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    volumes:
+      - ${APP_DATA_DIR}/minio_data:/data
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: on-failure
+    command: ["postgres", "-c", "port=5432"]
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - ${APP_DATA_DIR}/postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: on-failure
+
+  gotrue:
+    image: appflowyinc/gotrue:0.17.12-arm64v8
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    environment:
+      - GOTRUE_ADMIN_EMAIL=admin@umbrel.local
+      - GOTRUE_ADMIN_PASSWORD=${APP_PASSWORD}
+      - GOTRUE_DISABLE_SIGNUP=false
+      - GOTRUE_SITE_URL=appflowy-flutter://
+      - GOTRUE_URI_ALLOW_LIST=**
+      - GOTRUE_JWT_SECRET=${APP_PASSWORD}
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_ADMIN_GROUP_NAME=supabase_admin
+      - GOTRUE_DB_DRIVER=postgres
+      - API_EXTERNAL_URL=http://${DEVICE_DOMAIN_NAME}:8081/gotrue
+      - DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
+      - PORT=9999
+      - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/gotrue/verify
+      - GOTRUE_MAILER_URLPATHS_INVITE=/gotrue/verify
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/gotrue/verify
+      - GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE=/gotrue/verify
+      - GOTRUE_MAILER_AUTOCONFIRM=true
+      - GOTRUE_SMTP_MAX_FREQUENCY=1ns
+      - GOTRUE_RATE_LIMIT_EMAIL_SENT=100
+
+  appflowy_cloud:
+    image: appflowyinc/appflowy_cloud:0.17.11-arm64v8
+    restart: on-failure
+    depends_on:
+      gotrue:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    environment:
+      - RUST_LOG=info
+      - APPFLOWY_ENVIRONMENT=production
+      - APPFLOWY_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
+      - APPFLOWY_REDIS_URI=redis://redis:6379
+      - APPFLOWY_GOTRUE_JWT_SECRET=${APP_PASSWORD}
+      - APPFLOWY_GOTRUE_BASE_URL=http://gotrue:9999
+      - APPFLOWY_S3_CREATE_BUCKET=true
+      - APPFLOWY_S3_USE_MINIO=true
+      - APPFLOWY_S3_MINIO_URL=http://minio:9000
+      - APPFLOWY_S3_ACCESS_KEY=${APP_PASSWORD}
+      - APPFLOWY_S3_SECRET_KEY=${APP_PASSWORD}
+      - APPFLOWY_S3_BUCKET=appflowy
+      - APPFLOWY_S3_REGION=us-east-1
+      - APPFLOWY_S3_PRESIGNED_URL_ENDPOINT=http://${DEVICE_DOMAIN_NAME}:8081/minio-api
+      - APPFLOWY_MAILER_SMTP_HOST=
+      - APPFLOWY_MAILER_SMTP_PORT=
+      - APPFLOWY_MAILER_SMTP_USERNAME=
+      - APPFLOWY_MAILER_SMTP_EMAIL=
+      - APPFLOWY_MAILER_SMTP_PASSWORD=
+      - APPFLOWY_MAILER_SMTP_TLS_KIND=
+      - APPFLOWY_ACCESS_CONTROL=online
+      - APPFLOWY_DATABASE_MAX_CONNECTIONS=20
+      - AI_SERVER_HOST=0.0.0.0
+      - AI_SERVER_PORT=5001
+      - AI_OPENAI_API_KEY=
+      - APPFLOWY_WEB_URL=http://${DEVICE_DOMAIN_NAME}:8081
+      - APPFLOWY_BASE_URL=http://${DEVICE_DOMAIN_NAME}:8081
+      - APPFLOWY_SEARCH_SERVICE_URL=
+      - APPFLOWY_SEARCH_REQUEST_TIMEOUT_SECS=10
+      - AI_ENABLED=false
+      - SIGNUP_WHITELIST_ENABLED=false
+      - GUEST_INVITES_REQUIRE_ADMIN_APPROVAL=false
+
+  admin_frontend:
+    image: appflowyinc/admin_frontend:0.17.13-arm64v8
+    restart: on-failure
+    depends_on:
+      gotrue:
+        condition: service_healthy
+      appflowy_cloud:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    environment:
+      - APPFLOWY_GOTRUE_BASE_URL=http://gotrue:9999
+      - APPFLOWY_BASE_URL=http://appflowy_cloud:8000
+
+  appflowy_worker:
+    image: appflowyinc/appflowy_worker:0.17.11-arm64v8
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      appflowy_cloud:
+        condition: service_healthy
+    environment:
+      - RUST_LOG=info
+      - APPFLOWY_ENVIRONMENT=production
+      - APPFLOWY_WORKER_REDIS_URL=redis://redis:6379
+      - APPFLOWY_WORKER_ENVIRONMENT=production
+      - APPFLOWY_WORKER_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
+      - APPFLOWY_WORKER_DATABASE_NAME=postgres
+      - APPFLOWY_WORKER_IMPORT_TICK_INTERVAL=30
+      - APPFLOWY_S3_USE_MINIO=true
+      - APPFLOWY_S3_MINIO_URL=http://minio:9000
+      - APPFLOWY_S3_ACCESS_KEY=${APP_PASSWORD}
+      - APPFLOWY_S3_SECRET_KEY=${APP_PASSWORD}
+      - APPFLOWY_S3_BUCKET=appflowy
+      - APPFLOWY_S3_REGION=us-east-1
+      - APPFLOWY_MAILER_SMTP_HOST=
+      - APPFLOWY_MAILER_SMTP_PORT=
+      - APPFLOWY_MAILER_SMTP_USERNAME=
+      - APPFLOWY_MAILER_SMTP_EMAIL=
+      - APPFLOWY_MAILER_SMTP_PASSWORD=
+      - APPFLOWY_MAILER_SMTP_TLS_KIND=
+
+  appflowy_web:
+    image: appflowyinc/appflowy_web:0.16.15-arm64v8
+    restart: on-failure
+    depends_on:
+      appflowy_cloud:
+        condition: service_healthy
+    environment:
+      - APPFLOWY_BASE_URL=http://${DEVICE_DOMAIN_NAME}:8081
+      - APPFLOWY_GOTRUE_BASE_URL=http://${DEVICE_DOMAIN_NAME}:8081/gotrue
+      - APPFLOWY_WS_BASE_URL=ws://${DEVICE_DOMAIN_NAME}:8081/ws

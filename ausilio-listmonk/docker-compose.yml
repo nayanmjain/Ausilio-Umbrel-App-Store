@@ -8,26 +8,40 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: listmonk/listmonk:latest
+    image: listmonk/listmonk:v6.2.0-arm64v8
     restart: on-failure
+    command:
+      - sh
+      - -c
+      - ./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''
     environment:
+      - TZ=Etc/UTC
       - LISTMONK_db__host=db
       - LISTMONK_db__port=5432
       - LISTMONK_db__user=listmonk
-      - LISTMONK_db__password=listmonk_pass
+      - LISTMONK_db__password=${APP_PASSWORD}
       - LISTMONK_db__database=listmonk
       - LISTMONK_db__ssl_mode=disable
+      - LISTMONK_app__address=0.0.0.0:9000
+      - LISTMONK_app__admin_username=admin
+      - LISTMONK_app__admin_password=${APP_PASSWORD}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      - ${APP_DATA_DIR}/data:/listmonk/data
+      - ${APP_DATA_DIR}/data:/listmonk/uploads
 
   db:
     image: postgres:15-alpine
     restart: on-failure
     environment:
       - POSTGRES_USER=listmonk
-      - POSTGRES_PASSWORD=listmonk_pass
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
       - POSTGRES_DB=listmonk
     volumes:
       - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U listmonk"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
