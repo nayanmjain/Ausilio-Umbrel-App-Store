@@ -1,0 +1,39 @@
+manifestVersion: 1
+id: ausilio-paperclip
+name: Paperclip
+category: ai
+version: "2026.722.0"
+tagline: A team of AI agents for every person
+description: >-
+  Paperclip is a self-hosted control center for running AI agents like a team.
+  Create a company, set a goal, hire agents with roles and reporting lines, then
+  review their plans, approve important decisions, and track their work from one
+  dashboard.
+
+
+  Use Paperclip to manage projects, tasks, budgets, routines, and activity history
+  across different agent runtimes. It gives you an org chart, ticket system, cost
+  controls, approvals, and audit logs so you can see what each agent did and why.
+
+
+  Paperclip does not include an AI model by itself. To run agents, connect your own
+  provider keys and tools, such as OpenAI, Anthropic/Claude, Codex, Cursor, Gemini,
+  Hermes, OpenClaw, OpenCode, or other supported adapters. Provider usage may incur
+  costs, so set budgets before letting agents run unattended.
+
+
+  On first launch, the first person to sign up and claim the instance becomes its
+  owner (instance admin). Create your account, then claim the instance to begin.
+developer: Paperclip Labs, Inc.
+website: https://paperclip.ing/
+dependencies: []
+repo: https://github.com/paperclipai/paperclip
+support: https://github.com/paperclipai/paperclip/issues
+port: 8086
+icon: https://cdn.jsdelivr.net/gh/paperclipai/paperclip@v2026.722.0/ui/public/favicon.svg
+gallery:
+  - 1.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-08-15"

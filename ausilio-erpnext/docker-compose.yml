@@ -9,6 +9,7 @@ services:
 
   backend:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     volumes:
       - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
@@ -24,6 +25,7 @@ services:
 
   configurator:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: "no"
     entrypoint:
       - bash
@@ -49,6 +51,7 @@ services:
 
   create-site:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: "no"
     volumes:
       - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
@@ -58,9 +61,9 @@ services:
       - -c
     command:
       - >
-        wait-for-it -t 120 erpnext-db:3306;
-        wait-for-it -t 120 erpnext-redis-cache:6379;
-        wait-for-it -t 120 erpnext-redis-queue:6379;
+        wait-for-it -t 300 erpnext-db:3306;
+        wait-for-it -t 300 erpnext-redis-cache:6379;
+        wait-for-it -t 300 erpnext-redis-queue:6379;
         export start=`date +%s`;
         until [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".db_host // empty"` ]] && \
           [[ -n `grep -hs ^ sites/common_site_config.json | jq -r ".redis_cache // empty"` ]] && \
@@ -68,7 +71,7 @@ services:
         do
           echo "Waiting for sites/common_site_config.json to be created";
           sleep 5;
-          if (( `date +%s`-start > 120 )); then
+          if (( `date +%s`-start > 300 )); then
             echo "could not find sites/common_site_config.json with required keys";
             exit 1
           fi
@@ -77,14 +80,18 @@ services:
         if [ -d "sites/frontend" ]; then
           echo "Site frontend already exists, skipping creation";
         else
-          bench new-site --mariadb-user-host-login-scope='%' --admin-password=$$SITE_ADMIN_PASSWORD --db-root-username=root --db-root-password=$$MYSQL_ROOT_PASSWORD --install-app erpnext --set-default frontend;
+          bench new-site --no-mariadb-socket --mariadb-user-host-login-scope='%' --admin-password=$$SITE_ADMIN_PASSWORD --db-root-username=root --db-root-password=$$MYSQL_ROOT_PASSWORD --install-app erpnext --set-default frontend;
         fi;
+    depends_on:
+      configurator:
+        condition: service_completed_successfully
     environment:
       SITE_ADMIN_PASSWORD: ${APP_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${APP_PASSWORD}
 
   frontend:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     command:
       - nginx-entrypoint.sh
@@ -106,6 +113,7 @@ services:
 
   queue-long:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     command:
       - bench
@@ -124,6 +132,7 @@ services:
 
   queue-short:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     command:
       - bench
@@ -142,6 +151,7 @@ services:
 
   scheduler:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     command:
       - bench
@@ -155,6 +165,7 @@ services:
 
   websocket:
     image: frappe/erpnext:v16.32.1
+    user: "0:0"
     restart: on-failure
     command:
       - node

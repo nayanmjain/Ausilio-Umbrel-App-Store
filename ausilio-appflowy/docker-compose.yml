@@ -11,7 +11,7 @@ services:
     image: nginx:1.27-alpine
     restart: on-failure
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${APP_DATA_DIR}/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       appflowy_cloud:
         condition: service_healthy

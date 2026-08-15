@@ -1,0 +1,57 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-paperclip_server_1
+      APP_PORT: 3100
+      PROXY_AUTH_ADD: "false"
+
+  db:
+    image: postgres:17-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=paperclip
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
+      - POSTGRES_DB=paperclip
+    volumes:
+      - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperclip -d paperclip"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    image: ghcr.io/paperclipai/paperclip:sha-e55d702@sha256:6b9daa3c7b0659cce1ddb1f35454162342bc48bb5682123043fcd4d44aea237c
+    user: "1000:1000"
+    restart: on-failure
+    entrypoint:
+      - node
+    command:
+      - --import
+      - ./server/node_modules/tsx/dist/loader.mjs
+      - server/dist/index.js
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3100"
+      PAPERCLIP_HOME: "/paperclip"
+      DATABASE_URL: "postgres://paperclip:${APP_PASSWORD}@db:5432/paperclip"
+      PAPERCLIP_PUBLIC_URL: "http://${DEVICE_DOMAIN_NAME}:8086"
+      PAPERCLIP_ALLOWED_HOSTNAMES: "${DEVICE_DOMAIN_NAME},${DEVICE_DOMAIN_NAME}:8086,${DEVICE_HOSTNAME},${DEVICE_HOSTNAME}:8086,${APP_DOMAIN},${APP_DOMAIN}:8086,${APP_HIDDEN_SERVICE},${APP_PAPERCLIP_LOCAL_IPS},ausilio-paperclip_server_1"
+      BETTER_AUTH_SECRET: "${APP_SEED}"
+      PAPERCLIP_DEPLOYMENT_MODE: "authenticated"
+      PAPERCLIP_DEPLOYMENT_EXPOSURE: "private"
+      PAPERCLIP_TELEMETRY_DISABLED: "1"
+      DO_NOT_TRACK: "1"
+    volumes:
+      - ${APP_DATA_DIR}/data:/paperclip
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3100/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
