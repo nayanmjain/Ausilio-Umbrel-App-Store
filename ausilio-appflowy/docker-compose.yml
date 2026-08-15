@@ -38,7 +38,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/minio_data:/data
 
-  postgres:
+  appflowy-postgres:
     image: pgvector/pgvector:pg16
     restart: on-failure
     command: ["postgres", "-c", "port=5432"]
@@ -54,7 +54,7 @@ services:
     volumes:
       - ${APP_DATA_DIR}/postgres_data:/var/lib/postgresql/data
 
-  redis:
+  appflowy-redis:
     image: redis:7-alpine
     restart: on-failure
 
@@ -62,7 +62,7 @@ services:
     image: appflowyinc/gotrue:0.17.12
     restart: on-failure
     depends_on:
-      postgres:
+      appflowy-postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://127.0.0.1:9999/health"]
@@ -81,7 +81,7 @@ services:
       - GOTRUE_JWT_ADMIN_GROUP_NAME=supabase_admin
       - GOTRUE_DB_DRIVER=postgres
       - API_EXTERNAL_URL=http://${DEVICE_DOMAIN_NAME}:8081/gotrue
-      - DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
+      - DATABASE_URL=postgres://postgres:${APP_PASSWORD}@appflowy-postgres:5432/postgres
       - PORT=9999
       - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/gotrue/verify
       - GOTRUE_MAILER_URLPATHS_INVITE=/gotrue/verify
@@ -97,9 +97,9 @@ services:
     depends_on:
       gotrue:
         condition: service_healthy
-      postgres:
+      appflowy-postgres:
         condition: service_healthy
-      redis:
+      appflowy-redis:
         condition: service_started
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000/api/health"]
@@ -110,8 +110,8 @@ services:
     environment:
       - RUST_LOG=info
       - APPFLOWY_ENVIRONMENT=production
-      - APPFLOWY_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
-      - APPFLOWY_REDIS_URI=redis://redis:6379
+      - APPFLOWY_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@appflowy-postgres:5432/postgres
+      - APPFLOWY_REDIS_URI=redis://appflowy-redis:6379
       - APPFLOWY_GOTRUE_JWT_SECRET=${APP_PASSWORD}
       - APPFLOWY_GOTRUE_BASE_URL=http://gotrue:9999
       - APPFLOWY_S3_CREATE_BUCKET=true
@@ -157,18 +157,18 @@ services:
     image: appflowyinc/appflowy_worker:0.17.11
     restart: on-failure
     depends_on:
-      postgres:
+      appflowy-postgres:
         condition: service_healthy
-      redis:
+      appflowy-redis:
         condition: service_started
       appflowy_cloud:
         condition: service_healthy
     environment:
       - RUST_LOG=info
       - APPFLOWY_ENVIRONMENT=production
-      - APPFLOWY_WORKER_REDIS_URL=redis://redis:6379
+      - APPFLOWY_WORKER_REDIS_URL=redis://appflowy-redis:6379
       - APPFLOWY_WORKER_ENVIRONMENT=production
-      - APPFLOWY_WORKER_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@postgres:5432/postgres
+      - APPFLOWY_WORKER_DATABASE_URL=postgres://postgres:${APP_PASSWORD}@appflowy-postgres:5432/postgres
       - APPFLOWY_WORKER_DATABASE_NAME=postgres
       - APPFLOWY_WORKER_IMPORT_TICK_INTERVAL=30
       - APPFLOWY_S3_USE_MINIO=true

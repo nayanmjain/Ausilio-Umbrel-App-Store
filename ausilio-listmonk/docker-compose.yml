@@ -16,7 +16,7 @@ services:
       - ./listmonk --install --idempotent --yes --config '' && ./listmonk --upgrade --yes --config '' && ./listmonk --config ''
     environment:
       - TZ=Etc/UTC
-      - LISTMONK_db__host=db
+      - LISTMONK_db__host=listmonk-db
       - LISTMONK_db__port=5432
       - LISTMONK_db__user=listmonk
       - LISTMONK_db__password=${APP_PASSWORD}
@@ -26,12 +26,12 @@ services:
       - LISTMONK_app__admin_username=admin
       - LISTMONK_app__admin_password=${APP_PASSWORD}
     depends_on:
-      db:
+      listmonk-db:
         condition: service_healthy
     volumes:
       - ${APP_DATA_DIR}/data:/listmonk/uploads
 
-  db:
+  listmonk-db:
     image: postgres:15-alpine
     restart: on-failure
     environment:

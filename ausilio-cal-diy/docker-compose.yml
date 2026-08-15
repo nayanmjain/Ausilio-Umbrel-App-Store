@@ -12,9 +12,9 @@ services:
     restart: on-failure
     environment:
       - NODE_ENV=production
-      - DATABASE_HOST=db:5432
-      - DATABASE_URL=postgresql://calcom:${APP_PASSWORD}@db:5432/calcom
-      - DATABASE_DIRECT_URL=postgresql://calcom:${APP_PASSWORD}@db:5432/calcom
+      - DATABASE_HOST=calcom-db:5432
+      - DATABASE_URL=postgresql://calcom:${APP_PASSWORD}@calcom-db:5432/calcom
+      - DATABASE_DIRECT_URL=postgresql://calcom:${APP_PASSWORD}@calcom-db:5432/calcom
       - NEXTAUTH_SECRET=${APP_PASSWORD}
       - CALENDSO_ENCRYPTION_KEY=${APP_PASSWORD}
       - NEXT_PUBLIC_WEBAPP_URL=http://${DEVICE_DOMAIN_NAME}:8083
@@ -22,10 +22,10 @@ services:
       - NEXT_PUBLIC_LICENSE_CONSENT=1
       - CALCOM_TELEMETRY_DISABLED=1
     depends_on:
-      db:
+      calcom-db:
         condition: service_healthy
 
-  db:
+  calcom-db:
     image: postgres:15-alpine
     restart: on-failure
     environment:

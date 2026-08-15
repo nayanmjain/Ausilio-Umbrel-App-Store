@@ -7,6 +7,22 @@ services:
       APP_PORT: 3000
       PROXY_AUTH_ADD: "false"
 
+  seed:
+    image: documenso/documenso:v2.16.0
+    restart: "no"
+    environment:
+      - NEXT_PRIVATE_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
+      - NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
+      - DOCUMENSO_ADMIN_EMAIL=admin@umbrel.local
+      - DOCUMENSO_ADMIN_PASSWORD=${APP_PASSWORD}
+    volumes:
+      - ${APP_DATA_DIR}/seed.mjs:/app/seed.mjs:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["npx prisma migrate deploy --schema ../../packages/prisma/schema.prisma && node /app/seed.mjs"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   web:
     image: documenso/documenso:v2.16.0
     restart: on-failure
@@ -20,13 +36,13 @@ services:
       - NEXT_PRIVATE_INTERNAL_WEBAPP_URL=http://localhost:3000
       - NEXT_PRIVATE_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
       - NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
-      - NEXT_PRIVATE_SMTP_TRANSPORT=console
-      - NEXT_PRIVATE_SMTP_FROM_NAME=Documenso
-      - NEXT_PRIVATE_SMTP_FROM_ADDRESS=no-reply@${DEVICE_DOMAIN_NAME}
+      - NEXT_PUBLIC_DISABLE_SIGNUP=true
       - NEXT_PUBLIC_DOCUMENT_SIZE_UPLOAD_LIMIT=52428800
     depends_on:
       db:
         condition: service_healthy
+      seed:
+        condition: service_completed_successfully
 
   db:
     image: postgres:15-alpine
