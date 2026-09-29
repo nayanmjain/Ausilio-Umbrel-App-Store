@@ -2,9 +2,9 @@ manifestVersion: 1
 id: ausilio-erpnext
 name: ERPNext
 category: finance
-version: "16.32.1"
+version: "16.36.1"
 tagline: Open Source ERP for small and medium businesses
-description: Complete enterprise resource planning tool covering accounting, CRM, inventory management, HR, and payroll.
+description: Complete enterprise resource planning tool covering accounting, CRM, inventory management, HR, and payroll. First install creates the site automatically and can take 10-20 minutes on low-power devices; the app becomes reachable once setup finishes. Needs 4GB+ RAM.
 developer: Frappe Technologies
 website: https://erpnext.com
 dependencies: []

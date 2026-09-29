@@ -6,32 +6,22 @@ services:
       PROXY_AUTH_ADD: "false"
 
   backend:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     environment:
       DB_HOST: erpnext-db
       DB_PORT: "3306"
       MYSQL_ROOT_PASSWORD: ${APP_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${APP_PASSWORD}
     depends_on:
-      configurator:
+      create-site:
         condition: service_completed_successfully
-      erpnext-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8000/api/method/ping || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
 
   configurator:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: "no"
     entrypoint:
       - bash
@@ -52,16 +42,15 @@ services:
       REDIS_QUEUE: erpnext-redis-queue:6379
       SOCKETIO_PORT: "9000"
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
 
   create-site:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: "no"
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     entrypoint:
       - bash
       - -c
@@ -86,18 +75,23 @@ services:
         if [ -d "sites/frontend" ]; then
           echo "Site frontend already exists, skipping creation";
         else
-          bench new-site --no-mariadb-socket --mariadb-user-host-login-scope='%' --admin-password=$$SITE_ADMIN_PASSWORD --db-root-username=root --db-root-password=$$MYSQL_ROOT_PASSWORD --install-app erpnext --set-default frontend;
+          bench new-site --mariadb-user-host-login-scope='%' --admin-password=$$SITE_ADMIN_PASSWORD --db-root-username=root --db-root-password=$$MYSQL_ROOT_PASSWORD --install-app erpnext --set-default frontend;
         fi;
     depends_on:
       configurator:
         condition: service_completed_successfully
+      erpnext-db:
+        condition: service_healthy
+      erpnext-redis-cache:
+        condition: service_started
+      erpnext-redis-queue:
+        condition: service_started
     environment:
       SITE_ADMIN_PASSWORD: ${APP_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${APP_PASSWORD}
 
   frontend:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     command:
       - nginx-entrypoint.sh
@@ -111,21 +105,18 @@ services:
       PROXY_READ_TIMEOUT: 120
       CLIENT_MAX_BODY_SIZE: 50m
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     depends_on:
-      - websocket
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
+      create-site:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
+      websocket:
+        condition: service_started
 
   queue-long:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     command:
       - bench
@@ -133,18 +124,17 @@ services:
       - --queue
       - long,default,short
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     environment:
       FRAPPE_REDIS_CACHE: redis://erpnext-redis-cache:6379
       FRAPPE_REDIS_QUEUE: redis://erpnext-redis-queue:6379
     depends_on:
-      configurator:
+      create-site:
         condition: service_completed_successfully
 
   queue-short:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     command:
       - bench
@@ -152,32 +142,30 @@ services:
       - --queue
       - short,default
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     environment:
       FRAPPE_REDIS_CACHE: redis://erpnext-redis-cache:6379
       FRAPPE_REDIS_QUEUE: redis://erpnext-redis-queue:6379
     depends_on:
-      configurator:
+      create-site:
         condition: service_completed_successfully
 
   scheduler:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     command:
       - bench
       - schedule
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     depends_on:
-      configurator:
+      create-site:
         condition: service_completed_successfully
 
   websocket:
-    image: frappe/erpnext:v16.32.1
-    user: "0:0"
+    image: frappe/erpnext:v16.36.1
     restart: on-failure
     command:
       - node
@@ -186,10 +174,10 @@ services:
       FRAPPE_REDIS_CACHE: redis://erpnext-redis-cache:6379
       FRAPPE_REDIS_QUEUE: redis://erpnext-redis-queue:6379
     volumes:
-      - ${APP_DATA_DIR}/sites:/home/frappe/frappe-bench/sites
-      - ${APP_DATA_DIR}/logs:/home/frappe/frappe-bench/logs
+      - ${APP_DATA_DIR}/data/sites:/home/frappe/frappe-bench/sites
+      - ${APP_DATA_DIR}/data/logs:/home/frappe/frappe-bench/logs
     depends_on:
-      configurator:
+      create-site:
         condition: service_completed_successfully
 
   erpnext-db:
@@ -209,7 +197,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${APP_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${APP_PASSWORD}
     volumes:
-      - ${APP_DATA_DIR}/db_data:/var/lib/mysql
+      - ${APP_DATA_DIR}/data/db:/var/lib/mysql
 
   erpnext-redis-cache:
     image: redis:7-alpine
@@ -219,4 +207,4 @@ services:
     image: redis:7-alpine
     restart: on-failure
     volumes:
-      - ${APP_DATA_DIR}/redis_queue_data:/data
+      - ${APP_DATA_DIR}/data/redis-queue:/data

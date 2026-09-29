@@ -11,7 +11,7 @@ Community Umbrel app store (`id: ausilio`).
 | Listmonk (`ausilio-listmonk`) | 6.2.0 | 8084 | utilities |
 | Documenso (`ausilio-documenso`) | 2.16.0 | 8085 | productivity |
 | Paperclip (`ausilio-paperclip`) | 2026.916.1 | 8086 | ai |
-| ERPNext (`ausilio-erpnext`) | 16.32.1 | 8087 | finance |
+| ERPNext (`ausilio-erpnext`) | 16.36.1 | 8087 | finance |
 
 ## Notes
 
@@ -23,6 +23,10 @@ Community Umbrel app store (`id: ausilio`).
   existing volumes; changing them would orphan existing buckets.
 - Documenso internal URL is `http://web:3000` (container DNS, not localhost). Uploads persist in Postgres.
 - ERPNext needs 4GB+ RAM (12 services). Category is `finance` to match store taxonomy.
+  First install builds the site via `create-site` (10-20 min on a Pi); runtime services wait
+  for it, so the app only becomes reachable once setup finishes. Data lives under `data/`
+  (`sites`, `logs`, `db`, `redis-queue`); remove the app's data dir before reinstalling after
+  a failed install, or a half-created site will be skipped as "already exists".
 - Paperclip has no default credentials by design: the first signup claims instance ownership.
   Bring your own model provider keys; usage may incur costs.
 
