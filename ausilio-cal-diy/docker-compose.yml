@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   app_proxy:
     environment:
@@ -8,7 +6,7 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: calcom/cal.com:v6.2.0-arm
+    image: calcom/cal.com:v6.2.0
     restart: on-failure
     environment:
       - NODE_ENV=production
@@ -16,7 +14,7 @@ services:
       - DATABASE_URL=postgresql://calcom:${APP_PASSWORD}@calcom-db:5432/calcom
       - DATABASE_DIRECT_URL=postgresql://calcom:${APP_PASSWORD}@calcom-db:5432/calcom
       - NEXTAUTH_SECRET=${APP_PASSWORD}
-      - CALENDSO_ENCRYPTION_KEY=${APP_PASSWORD}
+      - CALENDSO_ENCRYPTION_KEY=${APP_CAL_DIY_ENCRYPTION_KEY}
       - NEXT_PUBLIC_WEBAPP_URL=http://${DEVICE_DOMAIN_NAME}:8083
       - NEXT_PUBLIC_API_V2_URL=http://${DEVICE_DOMAIN_NAME}:8083/api/v2
       - NEXT_PUBLIC_LICENSE_CONSENT=1

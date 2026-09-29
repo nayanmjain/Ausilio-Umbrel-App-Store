@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   app_proxy:
     environment:
@@ -33,7 +31,7 @@ services:
       - NEXT_PRIVATE_ENCRYPTION_KEY=${APP_PASSWORD}
       - NEXT_PRIVATE_ENCRYPTION_SECONDARY_KEY=${APP_PASSWORD}
       - NEXT_PUBLIC_WEBAPP_URL=http://${DEVICE_DOMAIN_NAME}:8085
-      - NEXT_PRIVATE_INTERNAL_WEBAPP_URL=http://localhost:3000
+      - NEXT_PRIVATE_INTERNAL_WEBAPP_URL=http://web:3000
       - NEXT_PRIVATE_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
       - NEXT_PRIVATE_DIRECT_DATABASE_URL=postgresql://documenso:${APP_PASSWORD}@db:5432/documenso
       - NEXT_PUBLIC_DISABLE_SIGNUP=true

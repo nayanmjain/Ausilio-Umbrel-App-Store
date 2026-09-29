@@ -1,0 +1,65 @@
+name: Validate app store
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check store manifest
+        run: |
+          python3 -c "import yaml; yaml.safe_load(open('umbrel-app-store.yml'))"
+
+      - name: Validate app manifests and compose files
+        run: |
+          python3 - <<'PY'
+          import glob, sys, yaml
+          errors = []
+          for manifest in sorted(glob.glob('ausilio-*/umbrel-app.yml')):
+              app = manifest.split('/')[0]
+              try:
+                  data = yaml.safe_load(open(manifest))
+              except Exception as e:
+                  errors.append(f"{manifest}: YAML error: {e}")
+                  continue
+              for field in ('manifestVersion', 'id', 'category', 'name', 'version', 'port'):
+                  if field not in data:
+                      errors.append(f"{manifest}: missing {field}")
+              if data.get('id') != app:
+                  errors.append(f"{manifest}: id {data.get('id')} != dir {app}")
+              allowed = {'productivity', 'utilities', 'ai', 'finance', 'files', 'media', 'networking', 'home', 'bitcoin', 'social'}
+              if data.get('category') not in allowed:
+                  errors.append(f"{manifest}: unexpected category {data.get('category')}")
+              compose = f"{app}/docker-compose.yml"
+              try:
+                  c = yaml.safe_load(open(compose))
+              except Exception as e:
+                  errors.append(f"{compose}: YAML error: {e}")
+                  continue
+              if 'version' in c:
+                  errors.append(f"{compose}: obsolete top-level 'version' field")
+              services = c.get('services', {})
+              if 'app_proxy' not in services:
+                  errors.append(f"{compose}: missing app_proxy")
+              for svc, cfg in services.items():
+                  if svc == 'app_proxy':
+                      continue
+                  image = (cfg or {}).get('image', '')
+                  if image and ('-arm' in image or 'arm64v8' in image):
+                      errors.append(f"{compose}: {svc} looks arch-specific: {image}")
+          if errors:
+              print('\n'.join(errors))
+              sys.exit(1)
+          print('All manifests and compose files look good.')
+          PY
+
+      - name: Docker compose config check
+        run: |
+          for app in ausilio-*/; do
+            echo "--- $app"
+            docker compose -f "$app/docker-compose.yml" config >/dev/null
+          done

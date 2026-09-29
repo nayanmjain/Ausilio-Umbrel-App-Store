@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: ausilio-erpnext
 name: ERPNext
-category: business
+category: finance
 version: "16.32.1"
 tagline: Open Source ERP for small and medium businesses
 description: Complete enterprise resource planning tool covering accounting, CRM, inventory management, HR, and payroll.
