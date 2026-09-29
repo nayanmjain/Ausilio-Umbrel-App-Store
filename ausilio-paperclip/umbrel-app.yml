@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-paperclip
 name: Paperclip
 category: ai
-version: "2026.722.0"
+version: "2026.916.1"
 tagline: A team of AI agents for every person
 description: >-
   Paperclip is a self-hosted control center for running AI agents like a team.
@@ -30,7 +30,7 @@ dependencies: []
 repo: https://github.com/paperclipai/paperclip
 support: https://github.com/paperclipai/paperclip/issues
 port: 8086
-icon: https://cdn.jsdelivr.net/gh/paperclipai/paperclip@v2026.722.0/ui/public/favicon.svg
+icon: https://cdn.jsdelivr.net/gh/paperclipai/paperclip@v2026.916.1/ui/public/favicon.svg
 gallery:
   - 1.png
 path: ""

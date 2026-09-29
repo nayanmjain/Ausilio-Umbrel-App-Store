@@ -10,7 +10,7 @@ Community Umbrel app store (`id: ausilio`).
 | Cal.com DIY (`ausilio-cal-diy`) | 6.2.0 | 8083 | productivity |
 | Listmonk (`ausilio-listmonk`) | 6.2.0 | 8084 | utilities |
 | Documenso (`ausilio-documenso`) | 2.16.0 | 8085 | productivity |
-| Paperclip (`ausilio-paperclip`) | 2026.722.0 | 8086 | ai |
+| Paperclip (`ausilio-paperclip`) | 2026.916.1 | 8086 | ai |
 | ERPNext (`ausilio-erpnext`) | 16.32.1 | 8087 | finance |
 
 ## Notes
