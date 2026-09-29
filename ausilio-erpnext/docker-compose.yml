@@ -28,6 +28,7 @@ services:
       - -c
     command:
       - >
+        if [ ! -f sites/common_site_config.json ]; then echo '{}' > sites/common_site_config.json; fi;
         ls -1 apps > sites/apps.txt;
         bench set-config -g db_host $$DB_HOST;
         bench set-config -gp db_port $$DB_PORT;
