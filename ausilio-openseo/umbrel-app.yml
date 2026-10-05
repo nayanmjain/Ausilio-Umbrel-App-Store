@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-openseo
 name: OpenSEO
 category: ai
-version: "1.0.0"
+version: "1.0.1"
 tagline: Open source alternative to Semrush and Ahrefs
 description: >-
   OpenSEO is a free, open-source SEO platform positioned as an alternative to
@@ -28,4 +28,4 @@ gallery:
 path: ""
 defaultWithApp: []
 submitter: Ausilio
-submissionDate: "2026-10-05"
+submissionDate: "2026-10-06"
