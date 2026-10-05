@@ -1,5 +1,3 @@
-version: "3.7"
-
 services:
   app_proxy:
     environment:
@@ -11,6 +9,7 @@ services:
     image: ghcr.io/every-app/open-seo:latest
     restart: on-failure
     environment:
+      - CLOUDFLARE_INCLUDE_PROCESS_ENV=true
       - PORT=3001
       - ALLOWED_HOST=${DEVICE_DOMAIN_NAME},${DEVICE_HOSTNAME},${APP_DOMAIN},${APP_HIDDEN_SERVICE}
       - AUTH_MODE=local_noauth
