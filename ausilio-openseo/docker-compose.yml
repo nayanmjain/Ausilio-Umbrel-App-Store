@@ -6,7 +6,7 @@ services:
       PROXY_AUTH_ADD: "false"
 
   open-seo:
-    image: ghcr.io/every-app/open-seo:latest
+    image: ghcr.io/every-app/open-seo:v0.1.10
     restart: on-failure
     environment:
       - CLOUDFLARE_INCLUDE_PROCESS_ENV=true
