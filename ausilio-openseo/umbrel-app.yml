@@ -1,0 +1,31 @@
+manifestVersion: 1
+id: ausilio-openseo
+name: OpenSEO
+category: ai
+version: "1.0.0"
+tagline: Open source alternative to Semrush and Ahrefs
+description: >-
+  OpenSEO is a free, open-source SEO platform positioned as an alternative to
+  Semrush and Ahrefs. It provides keyword research, rank tracking, competitor
+  insights, backlink analysis, site audits, and AI visibility tracking.
+  
+  OpenSEO connects with AI agents like Claude Code, OpenClaw, and Hermes via
+  MCP (Model Context Protocol) and provides pre-built Agent Skills for SEO
+  workflows. Bring your own DataForSEO API key and pay only for what you use.
+
+  On first launch, you'll need to configure your DataForSEO API key in the
+  environment variables. See the documentation for setup instructions.
+
+developer: Every App
+website: https://openseo.so
+dependencies: []
+repo: https://github.com/every-app/open-seo
+support: https://github.com/every-app/open-seo/issues
+port: 3001
+icon: https://cdn.jsdelivr.net/gh/every-app/open-seo@main/web/public/android-chrome-192x192.png
+gallery:
+  - 1.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-05"
