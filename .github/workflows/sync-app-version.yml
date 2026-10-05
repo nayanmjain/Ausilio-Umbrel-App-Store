@@ -1,0 +1,130 @@
+name: Sync Manifest Version on Compose Update
+
+on:
+  pull_request:
+    paths:
+      - "**/docker-compose.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-versions:
+    # Runs on PRs opened by Dependabot or Renovate (or manual dispatch for drift checks)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Detect changed apps and sync version
+        run: |
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import datetime
+          import yaml
+
+          # Map each app directory to a regex matching its PRIMARY image.
+          # Sidecar images (postgres, redis, nginx, minio, ...) must NOT
+          # drive the manifest version.
+          PRIMARY_IMAGE = {
+              "ausilio-appflowy": r"appflowyinc/appflowy_cloud:",
+              "ausilio-cal-diy": r"calcom/cal\.com:",
+              "ausilio-documenso": r"documenso/documenso:",
+              "ausilio-erpnext": r"frappe/erpnext:",
+              "ausilio-listmonk": r"listmonk/listmonk:",
+              "ausilio-openseo": r"every-app/open-seo:",
+              "ausilio-paperclip": r"paperclipai/paperclip:",
+          }
+
+          def changed_compose_files():
+              """List docker-compose.yml files changed in this PR (or all, on dispatch)."""
+              if "${{ github.event_name }}" == "workflow_dispatch":
+                  out = subprocess.run(
+                      ["git", "ls-files", "ausilio-*/docker-compose.yml"],
+                      capture_output=True, text=True, check=True,
+                  )
+                  return sorted(out.stdout.split())
+              base = "${{ github.event.pull_request.base.sha }}"
+              out = subprocess.run(
+                  ["git", "diff", "--name-only", base, "HEAD"],
+                  capture_output=True, text=True, check=True,
+              )
+              return sorted(
+                  f for f in out.stdout.split()
+                  if f.endswith("docker-compose.yml")
+              )
+
+          def extract_version(image):
+              """Extract a clean version from an image ref, or None if unversioned."""
+              ref = image.split("@")[0]          # strip @sha256: digest
+              tag = ref.rsplit(":", 1)[-1] if ":" in ref else ""
+              if not tag or tag == "latest":
+                  return None
+              tag = tag.lstrip("v")              # v1.4.0 -> 1.4.0
+              # Accept date-based (2026.916.1), semver (6.2.0) and
+              # calver/minio-style tags; reject rolling tags like 'alpine'.
+              if re.fullmatch(r"\d[\d.\-]*\d", tag):
+                  return tag
+              return None
+
+          for compose_file in changed_compose_files():
+              app_dir = compose_file.split("/")[0]
+              manifest = f"{app_dir}/umbrel-app.yml"
+              pattern = PRIMARY_IMAGE.get(app_dir)
+              if pattern is None:
+                  print(f"SKIP {app_dir}: no primary-image mapping, add one.")
+                  continue
+              try:
+                  with open(compose_file) as fh:
+                      compose = yaml.safe_load(fh)
+                  with open(manifest) as fh:
+                      data = yaml.safe_load(fh)
+              except FileNotFoundError as e:
+                  print(f"SKIP {app_dir}: {e}")
+                  continue
+
+              images = [
+                  cfg.get("image", "")
+                  for svc, cfg in (compose.get("services") or {}).items()
+                  if svc != "app_proxy" and isinstance(cfg, dict)
+              ]
+              primary = next((i for i in images if re.search(pattern, i)), None)
+              if not primary:
+                  print(f"SKIP {app_dir}: primary image not found.")
+                  continue
+              new_version = extract_version(primary)
+              if not new_version:
+                  print(f"SKIP {app_dir}: image '{primary}' has no usable tag.")
+                  continue
+              old_version = str(data.get("version", ""))
+              if old_version == new_version:
+                  print(f"OK {app_dir}: already at {new_version}.")
+                  continue
+              data["version"] = new_version
+              data["submissionDate"] = datetime.date.today().isoformat()
+              with open(manifest, "w") as fh:
+                  yaml.safe_dump(data, fh, sort_keys=False, default_flow_style=False)
+              print(f"BUMP {app_dir}: {old_version} -> {new_version}.")
+          PY
+
+      - name: Commit manifest changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add "ausilio-*/umbrel-app.yml"
+            git commit -m "chore: auto-sync umbrel-app.yml version"
+            git push
+          else
+            echo "No manifest changes detected."
+          fi
