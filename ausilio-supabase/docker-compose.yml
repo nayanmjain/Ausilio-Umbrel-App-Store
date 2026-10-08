@@ -1,0 +1,347 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-supabase_api-gw_1
+      APP_PORT: 8000
+      PROXY_AUTH_ADD: "false"
+
+  api-gw:
+    image: envoyproxy/envoy:v1.39.1
+    restart: on-failure
+    entrypoint: ["/bin/sh", "/etc/envoy/docker-entrypoint.sh"]
+    volumes:
+      - ${APP_DATA_DIR}/envoy:/etc/envoy
+    environment:
+      ANON_KEY: ${APP_SUPABASE_ANON_KEY}
+      SERVICE_ROLE_KEY: ${APP_SUPABASE_SERVICE_KEY}
+      SUPABASE_PUBLISHABLE_KEY: ""
+      SUPABASE_SECRET_KEY: ""
+      ANON_KEY_ASYMMETRIC: ""
+      SERVICE_ROLE_KEY_ASYMMETRIC: ""
+      SUPABASE_PUBLIC_URL: http://${DEVICE_DOMAIN_NAME}:8088
+      DASHBOARD_USERNAME: admin
+      DASHBOARD_PASSWORD: ${APP_PASSWORD}
+    depends_on:
+      studio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/8000'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  studio:
+    image: supabase/studio:2026.09.07-sha-7996410
+    restart: on-failure
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/api/platform/profile').then((r) => {if (r.status !== 200) throw new Error(r.status)})\""
+        ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
+      start_period: 20s
+    environment:
+      HOSTNAME: "0.0.0.0"
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${APP_PASSWORD}
+      POSTGRES_USER_READ_WRITE: postgres
+      PG_META_CRYPTO_KEY: ${APP_SUPABASE_PG_META_CRYPTO_KEY}
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_DB_EXTRA_SEARCH_PATH: public
+      DEFAULT_ORGANIZATION_NAME: Default Organization
+      DEFAULT_PROJECT_NAME: Default Project
+      OPENAI_API_KEY: ""
+      SUPABASE_URL: http://api-gw:8000
+      SUPABASE_PUBLIC_URL: http://${DEVICE_DOMAIN_NAME}:8088
+      SUPABASE_ANON_KEY: ${APP_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${APP_SUPABASE_SERVICE_KEY}
+      AUTH_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      SUPABASE_PUBLISHABLE_KEY: ""
+      SUPABASE_SECRET_KEY: ""
+      ENABLED_FEATURES_LOGS_ALL: "false"
+      SNIPPETS_MANAGEMENT_FOLDER: /app/snippets
+      EDGE_FUNCTIONS_MANAGEMENT_FOLDER: /app/edge-functions
+    volumes:
+      - ${APP_DATA_DIR}/snippets:/app/snippets
+      - ${APP_DATA_DIR}/functions:/app/edge-functions:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  auth:
+    image: supabase/gotrue:v2.196.0
+    restart: on-failure
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9999/health"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://${DEVICE_DOMAIN_NAME}:8088/auth/v1
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${APP_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: http://${DEVICE_DOMAIN_NAME}:8088
+      GOTRUE_URI_ALLOW_LIST: ""
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      GOTRUE_JWT_ISSUER: http://${DEVICE_DOMAIN_NAME}:8088/auth/v1
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@example.com
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_SMS_AUTOCONFIRM: "true"
+
+  rest:
+    image: postgrest/postgrest:v14.17
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${APP_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_DB_EXTRA_SEARCH_PATH: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+      PGRST_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    command:
+      [
+        "postgrest"
+      ]
+
+  realtime:
+    image: supabase/realtime:v2.134.10
+    restart: on-failure
+    networks:
+      default:
+        aliases:
+          - realtime-dev.supabase-realtime
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -sSfL --head -o /dev/null -H \"Authorization: Bearer ${APP_SUPABASE_ANON_KEY}\" http://localhost:4000/api/tenants/realtime-dev/health"
+        ]
+      timeout: 5s
+      interval: 30s
+      retries: 3
+      start_period: 10s
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${APP_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
+      DB_ENC_KEY: ${APP_SUPABASE_REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      SECRET_KEY_BASE: ${APP_SUPABASE_SECRET_KEY_BASE}
+      METRICS_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+      DISABLE_HEALTHCHECK_LOGGING: "true"
+
+  storage:
+    image: supabase/storage-api:v1.74.0
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+      imgproxy:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://storage:5000/status"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      ANON_KEY: ${APP_SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${APP_SUPABASE_SERVICE_KEY}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${APP_PASSWORD}@db:5432/postgres
+      STORAGE_PUBLIC_URL: http://${DEVICE_DOMAIN_NAME}:8088
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: stub
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      ENABLE_IMAGE_TRANSFORMATION: "true"
+      IMGPROXY_URL: http://imgproxy:5001
+      S3_PROTOCOL_ACCESS_KEY_ID: ${APP_SUPABASE_S3_KEY_ID}
+      S3_PROTOCOL_ACCESS_KEY_SECRET: ${APP_SUPABASE_S3_KEY_SECRET}
+    volumes:
+      - ${APP_DATA_DIR}/storage:/var/lib/storage
+
+  imgproxy:
+    image: darthsim/imgproxy:v3.31.4
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/storage:/var/lib/storage
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "imgproxy",
+          "health"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      IMGPROXY_BIND: ":5001"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_AUTO_WEBP: "true"
+      IMGPROXY_MAX_SRC_RESOLUTION: 16.8
+
+  meta:
+    image: supabase/postgres-meta:v0.99.0
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${APP_PASSWORD}
+      CRYPTO_KEY: ${APP_SUPABASE_PG_META_CRYPTO_KEY}
+
+  functions:
+    image: supabase/edge-runtime:v1.76.2
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/functions:/home/deno/functions
+      - ${APP_DATA_DIR}/deno-cache:/root/.cache/deno
+    depends_on:
+      api-gw:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/9000'"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    environment:
+      JWT_SECRET: ${APP_SUPABASE_JWT_SECRET}
+      SUPABASE_URL: http://api-gw:8000
+      SUPABASE_PUBLIC_URL: http://${DEVICE_DOMAIN_NAME}:8088
+      SUPABASE_ANON_KEY: ${APP_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${APP_SUPABASE_SERVICE_KEY}
+      SUPABASE_PUBLISHABLE_KEYS: '{"default":""}'
+      SUPABASE_SECRET_KEYS: '{"default":""}'
+      SUPABASE_DB_URL: postgresql://postgres:${APP_PASSWORD}@db:5432/postgres
+      VERIFY_JWT: "false"
+    command:
+      [
+        "start",
+        "--user-worker-request-idle-timeout",
+        "150000",
+        "--main-service",
+        "/home/deno/functions/main"
+      ]
+
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/db-init/99-realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ${APP_DATA_DIR}/db-init/98-webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:ro
+      - ${APP_DATA_DIR}/db-init/99-roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ${APP_DATA_DIR}/db-init/99-jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ${APP_DATA_DIR}/db-init/97-_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
+      - ${APP_DATA_DIR}/db-init/99-logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:ro
+      - ${APP_DATA_DIR}/db-init/99-pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:ro
+      - ${APP_DATA_DIR}/db-config:/etc/postgresql-custom
+      - ${APP_DATA_DIR}/db/data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "postgres",
+          "-h",
+          "localhost"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${APP_PASSWORD}
+      POSTGRES_PASSWORD: ${APP_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_EXP: 3600
+    command:
+      [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal"
+      ]

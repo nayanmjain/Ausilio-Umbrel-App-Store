@@ -12,6 +12,7 @@ Community Umbrel app store (`id: ausilio`).
 | Documenso (`ausilio-documenso`) | 2.16.0 | 8085 | productivity |
 | Paperclip (`ausilio-paperclip`) | 2026.916.1 | 8086 | ai |
 | ERPNext (`ausilio-erpnext`) | 16.36.1 | 8087 | finance |
+| Supabase (`ausilio-supabase`) | 2026.09.07 | 8088 | utilities |
 
 ## Notes
 
@@ -29,6 +30,15 @@ Community Umbrel app store (`id: ausilio`).
   a failed install, or a half-created site will be skipped as "already exists".
 - Paperclip has no default credentials by design: the first signup claims instance ownership.
   Bring your own model provider keys; usage may incur costs.
+- Supabase (`ausilio-supabase`) serves Studio and all APIs through one Envoy gateway on
+  port 8088 (Studio at `/`, APIs under `/auth/v1`, `/rest/v1`, `/realtime/v1`,
+  `/storage/v1`, `/functions/v1`). Envoy configs and Postgres init SQL are snapshotted
+  from upstream `supabase/supabase:docker` and provisioned into `${APP_DATA_DIR}` by
+  `exports.sh`, which also derives the HS256 `JWT_SECRET` plus anon/service_role API
+  keys deterministically. Dashboard login is `admin` / `${APP_PASSWORD}` (basic auth);
+  anon/service keys are shown in Studio API settings. Email confirmation is
+  auto-approved (no SMTP on Umbrel); phone auth is disabled. Supavisor is omitted
+  (services connect to Postgres directly). Needs 2GB+ RAM (10 services).
 
 ## Validation
 

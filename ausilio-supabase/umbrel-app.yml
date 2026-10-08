@@ -1,0 +1,31 @@
+manifestVersion: 1
+id: ausilio-supabase
+name: Supabase
+category: utilities
+version: "2026.09.07"
+tagline: Open-source Firebase alternative
+description: >-
+  Supabase is a self-hosted backend platform: Postgres database, authentication,
+  auto-generated REST and GraphQL APIs, realtime subscriptions, file storage,
+  and edge functions, managed from the Studio dashboard. Everything is served
+  through a single gateway on this port (Studio UI at /, APIs under
+  /auth/v1, /rest/v1, /realtime/v1, /storage/v1, /functions/v1).
+
+
+  Open the app and log in with username admin and your Umbrel app password when
+  prompted. Find the anon and service_role API keys in Studio under Project
+  Settings > API. Email confirmation is auto-approved since no SMTP server is
+  configured. Needs 2GB+ RAM (10 services).
+developer: Supabase
+website: https://supabase.com
+dependencies: []
+repo: https://github.com/supabase/supabase
+support: https://github.com/supabase/supabase/issues
+port: 8088
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/supabase.png
+path: ""
+defaultUsername: admin
+deterministicPassword: true
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-08"

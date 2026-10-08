@@ -43,6 +43,7 @@ jobs:
               "ausilio-listmonk": r"listmonk/listmonk:",
               "ausilio-openseo": r"every-app/open-seo:",
               "ausilio-paperclip": r"paperclipai/paperclip:",
+              "ausilio-supabase": r"supabase/studio:",
           }
 
           def changed_compose_files():
@@ -70,6 +71,7 @@ jobs:
               if not tag or tag == "latest":
                   return None
               tag = tag.lstrip("v")              # v1.4.0 -> 1.4.0
+              tag = re.sub(r"-sha-[0-9a-f]+$", "", tag)  # 2026.09.07-sha-7996410 -> 2026.09.07
               # Accept date-based (2026.916.1), semver (6.2.0) and
               # calver/minio-style tags; reject rolling tags like 'alpine'.
               if re.fullmatch(r"\d[\d.\-]*\d", tag):
