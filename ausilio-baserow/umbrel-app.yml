@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-baserow
 name: Baserow
 category: productivity
-version: "2.4.0"
+version: "2.4.0-1"
 tagline: Open-source no-code database and Airtable alternative
 description: >-
   Baserow is an open-source online database: build tables, grid, kanban,

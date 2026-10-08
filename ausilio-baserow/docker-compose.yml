@@ -11,6 +11,10 @@ services:
     environment:
       - BASEROW_PUBLIC_URL=http://${DEVICE_DOMAIN_NAME}:8092
       - BASEROW_CADDY_ADDRESSES=:80
+      # Accept hostname, app domain, and LAN IPs too, otherwise Baserow shows
+      # "Site not found" when the browser URL host differs from PUBLIC_URL.
+      - BASEROW_EXTRA_PUBLIC_URLS=${APP_BASEROW_EXTRA_PUBLIC_URLS}
+      - BASEROW_EXTRA_ALLOWED_HOSTS=${APP_BASEROW_EXTRA_HOSTS}
       - MIGRATE_ON_STARTUP=true
       # Single celery worker + minimal mode keeps memory use down on small servers.
       - BASEROW_AMOUNT_OF_WORKERS=1

@@ -16,7 +16,7 @@ Community Umbrel app store (`id: ausilio`).
 | FreeLLMAPI (`ausilio-freellmapi`) | 0.13.6 | 8089 | ai |
 | Shlink (`ausilio-shlink`) | 5.1.7 | 8090 | networking |
 | Dub (`ausilio-dub`) | 2026.10.08 | 8091 | networking |
-| Baserow (`ausilio-baserow`) | 2.4.0 | 8092 | productivity |
+| Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
 
 ## Notes
 
@@ -83,7 +83,11 @@ Community Umbrel app store (`id: ausilio`).
   `app_proxy`. Secrets (Django `SECRET_KEY`, DB/Redis passwords) are
   auto-generated into `/baserow/data`, so all state persists in `data/`.
   `BASEROW_RUN_MINIMAL=yes` with one worker keeps RAM down. First browser
-  signup claims instance ownership; no SMTP is configured. Needs 2GB+ RAM.
+  signup claims instance ownership; no SMTP is configured. `exports.sh`
+  registers the device hostname, app domain, and LAN IPs in
+  `BASEROW_EXTRA_PUBLIC_URLS`/`BASEROW_EXTRA_ALLOWED_HOSTS`, otherwise Baserow
+  shows "Site not found" when the browser URL host differs from
+  `BASEROW_PUBLIC_URL`. Needs 2GB+ RAM.
   First boot applies migrations and can take several minutes.
 
 ## Validation
