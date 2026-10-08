@@ -1,0 +1,37 @@
+manifestVersion: 1
+id: ausilio-freellmapi
+name: FreeLLMAPI
+category: ai
+version: "0.13.6"
+tagline: One OpenAI-compatible endpoint for 34 free LLM providers
+description: >-
+  FreeLLMAPI aggregates the free tiers of 34 LLM providers (635 model endpoints,
+  ~7.4B tokens/month) plus any custom OpenAI-compatible endpoint behind a single
+  OpenAI-compatible /v1 API, with smart routing, automatic failover, per-key
+  rate tracking, and AES-256-GCM encrypted key storage.
+
+
+  Open the app dashboard to add your provider keys on the Keys page, reorder the
+  fallback chain, then copy the unified freellmapi-... bearer token into any
+  OpenAI-compatible client (base URL http://<umbrel>:8089/v1), coding agent, or
+  ChatGPT MCP tunnel. Also serves Anthropic (/v1/messages), Gemini (/v1beta),
+  Ollama emulation, images, video, speech, transcription, and embeddings.
+
+
+  First-run setup is open by design: create the first dashboard account in the
+  browser. If the server is reachable from other devices, a one-time setup code
+  printed in the app logs is required to claim it. Provider usage stays within
+  each provider's free tier as long as keys are valid; bring your own keys.
+developer: tashfeenahmed
+website: https://freellmapi.co
+dependencies: []
+repo: https://github.com/tashfeenahmed/freellmapi
+support: https://github.com/tashfeenahmed/freellmapi/issues
+port: 8089
+icon: https://cdn.jsdelivr.net/gh/tashfeenahmed/freellmapi@v0.13.6/client/public/favicon.svg
+gallery:
+  - 1.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-08"

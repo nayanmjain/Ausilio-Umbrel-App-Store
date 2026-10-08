@@ -1,0 +1,26 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-freellmapi_web_1
+      APP_PORT: 3001
+      PROXY_AUTH_ADD: "false"
+
+  web:
+    image: ghcr.io/tashfeenahmed/freellmapi:v0.13.6
+    restart: on-failure
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - ENCRYPTION_KEY=${APP_FREELLMAPI_ENCRYPTION_KEY}
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/server/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3001/api/ping').then((r)=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))\""
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

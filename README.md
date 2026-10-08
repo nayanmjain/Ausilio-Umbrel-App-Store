@@ -13,6 +13,7 @@ Community Umbrel app store (`id: ausilio`).
 | Paperclip (`ausilio-paperclip`) | 2026.916.1 | 8086 | ai |
 | ERPNext (`ausilio-erpnext`) | 16.36.1 | 8087 | finance |
 | Supabase (`ausilio-supabase`) | 2026.09.07 | 8088 | utilities |
+| FreeLLMAPI (`ausilio-freellmapi`) | 0.13.6 | 8089 | ai |
 
 ## Notes
 
@@ -30,6 +31,15 @@ Community Umbrel app store (`id: ausilio`).
   a failed install, or a half-created site will be skipped as "already exists".
 - Paperclip has no default credentials by design: the first signup claims instance ownership.
   Bring your own model provider keys; usage may incur costs.
+- FreeLLMAPI (`ausilio-freellmapi`) serves its dashboard and the unified
+  OpenAI-compatible API on port 8089 (`/v1`, plus `/v1/messages`, `/v1beta`,
+  Ollama emulation, and `/mcp`). `exports.sh` derives a deterministic 64-char
+  hex `ENCRYPTION_KEY` from the Umbrel seed so encrypted provider keys survive
+  restarts/upgrades. Data (SQLite) persists in `${APP_DATA_DIR}/data`.
+  First-run setup is open by design: create the first dashboard account in the
+  browser (a one-time setup code is printed in the app logs while no account
+  exists). Bring your own free-tier provider keys; the router stays within
+  each provider's free cap via per-key rate tracking.
 - Supabase (`ausilio-supabase`) serves Studio and all APIs through one Envoy gateway on
   port 8088 (Studio at `/`, APIs under `/auth/v1`, `/rest/v1`, `/realtime/v1`,
   `/storage/v1`, `/functions/v1`). Envoy configs and Postgres init SQL are snapshotted
