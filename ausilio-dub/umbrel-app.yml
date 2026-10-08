@@ -1,0 +1,35 @@
+manifestVersion: 1
+id: ausilio-dub
+name: Dub
+category: networking
+version: "2026.10.08"
+tagline: Open-source link attribution platform (experimental)
+description: >-
+  Dub is the open-source link attribution platform for short links, conversion
+  tracking, and partner programs. EXPERIMENTAL on Umbrel: Dub has no official
+  Docker image and its self-host stack still requires external SaaS accounts
+  even for local development (Upstash Redis + QStash for caching/queues,
+  Tinybird for click analytics, plus a login provider). This package builds
+  Dub from pinned upstream source (commit 41d7605, 2026-10-08) and provides
+  local MySQL (PlanetScale-compatible via ps-http-sim) plus a local mail
+  catcher, so you can tinker on a non-Pi server with 4GB+ RAM.
+
+  First install builds the app from source (10-25 min) and pushes the Prisma
+  schema to the local database. Without Upstash/Tinybird keys the dashboard
+  loads but link redirects and analytics are degraded; add your free-tier
+  UPSTASH_REDIS_REST_URL/TOKEN, QSTASH_TOKEN + signing keys, and
+  TINYBIRD_API_KEY/URL plus GITHUB_CLIENT_ID/SECRET (or SMTP magic links via
+  the bundled mail catcher) as overrides to unlock full functionality. See
+  README Notes for the exact variables. For a one-click offline shortener,
+  use Shlink (ausilio-shlink) instead.
+developer: Dub
+website: https://dub.co/?ref=selfh.st
+dependencies: []
+repo: https://github.com/dubinc/dub
+support: https://github.com/dubinc/dub/issues
+port: 8091
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/dub.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-08"

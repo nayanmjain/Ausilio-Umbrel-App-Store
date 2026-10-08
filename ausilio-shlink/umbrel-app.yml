@@ -1,0 +1,33 @@
+manifestVersion: 1
+id: ausilio-shlink
+name: Shlink
+category: networking
+version: "5.1.7"
+tagline: Self-hosted URL shortener with analytics and QR codes
+description: >-
+  Shlink is a self-hosted URL shortener with click analytics, QR codes, custom
+  slugs, API access, and expiring links. This package runs the Shlink backend
+  plus Postgres fully offline on your server.
+
+  Manage it from any Shlink web client: open https://app.shlink.io (runs 100%
+  in your browser), add a server with URL http://<your-server-ip>:8090 and the
+  API key below. No data leaves your network except your browser talking
+  directly to your server.
+
+  API key: derived per-install, printed by exports.sh. After install, get it
+  with: grep APP_SHLINK_API_KEY ~/umbrel/app-data/ausilio-shlink/exports.env
+  (or re-derive from your Umbrel seed). Short links use your server address as
+  the default domain (http://<server>:8090/<short-code>); set a custom domain
+  later via the API if you have one. Geo-tracking is off by default (no
+  GeoLite2 key); tracking itself stays on.
+developer: Shlink
+website: https://shlink.io
+dependencies: []
+repo: https://github.com/shlinkio/shlink
+support: https://github.com/shlinkio/shlink/issues
+port: 8090
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/shlink.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-08"

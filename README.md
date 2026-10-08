@@ -14,6 +14,8 @@ Community Umbrel app store (`id: ausilio`).
 | ERPNext (`ausilio-erpnext`) | 16.36.1 | 8087 | finance |
 | Supabase (`ausilio-supabase`) | 2026.09.07 | 8088 | utilities |
 | FreeLLMAPI (`ausilio-freellmapi`) | 0.13.6 | 8089 | ai |
+| Shlink (`ausilio-shlink`) | 5.1.7 | 8090 | networking |
+| Dub (`ausilio-dub`) | 2026.10.08 | 8091 | networking |
 
 ## Notes
 
@@ -55,6 +57,23 @@ Community Umbrel app store (`id: ausilio`).
   anon/service keys are shown in Studio API settings. Email confirmation is
   auto-approved (no SMTP on Umbrel); phone auth is disabled. Supavisor is omitted
   (services connect to Postgres directly). Needs 2GB+ RAM (10 services).
+- Shlink (`ausilio-shlink`) runs the `shlinkio/shlink:5.1.7` backend (multi-arch)
+  plus Postgres, fully offline. `exports.sh` derives a deterministic UUID-format
+  `INITIAL_API_KEY` (Shlink only honors it when no keys exist, so it must be
+  stable); it is also persisted to `${APP_DATA_DIR}/exports.env` for retrieval.
+  The Umbrel port (8090) is part of `DEFAULT_DOMAIN`, so short URLs look like
+  `http://<server>:8090/<code>`. Manage it from https://app.shlink.io (static,
+  runs in your browser) by adding a server with your Umbrel URL + API key.
+  Geo-tracking stays off (`SKIP_INITIAL_GEOLITE_DOWNLOAD=true`, no license key).
+- Dub (`ausilio-dub`) is EXPERIMENTAL: upstream has no releases and no official
+  Docker image, so this builds pinned source (`41d7605`, 2026-10-08) on first
+  install (10-25 min, needs 4GB+ RAM) with local MySQL + PlanetScale simulator
+  (`ps-http-sim`) + Mailhog. Upstream requires external SaaS even for local dev,
+  so without your own `UPSTASH_REDIS_REST_URL/TOKEN`, `QSTASH_TOKEN` + signing
+  keys, `TINYBIRD_API_KEY/URL`, and a login provider (`GITHUB_CLIENT_ID/SECRET`
+  or SMTP magic links), redirects/analytics stay degraded. Mock Stripe keys keep
+  workspace routes from 500ing locally. For one-click offline shortening, use
+  Shlink instead.
 
 ## Validation
 

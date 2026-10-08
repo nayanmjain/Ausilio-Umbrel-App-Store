@@ -1,0 +1,86 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-dub_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ausilio-dub-web:2026.10.08
+    restart: on-failure
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXTAUTH_SECRET=${APP_DUB_NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=http://${DEVICE_DOMAIN_NAME}:8091
+      - CRON_SECRET=${APP_DUB_CRON_SECRET}
+      - ENCRYPTION_KEY=${APP_DUB_ENCRYPTION_KEY}
+      - DATABASE_URL=mysql://root:${APP_PASSWORD}@db:3306/dub
+      - PLANETSCALE_DATABASE_URL=http://root:${APP_PASSWORD}@ps-proxy:3900/dub
+      - NEXT_PUBLIC_APP_DOMAIN=${DEVICE_DOMAIN_NAME}:8091
+      - NEXT_PUBLIC_APP_SHORT_DOMAIN=${DEVICE_DOMAIN_NAME}:8091
+      - UPSTASH_REDIS_REST_URL=${APP_DUB_UPSTASH_REDIS_REST_URL:-}
+      - UPSTASH_REDIS_REST_TOKEN=${APP_DUB_UPSTASH_REDIS_REST_TOKEN:-}
+      - QSTASH_URL=https://qstash-us-east-1.upstash.io
+      - QSTASH_TOKEN=${APP_DUB_QSTASH_TOKEN:-}
+      - QSTASH_CURRENT_SIGNING_KEY=${APP_DUB_QSTASH_CURRENT_SIGNING_KEY:-}
+      - QSTASH_NEXT_SIGNING_KEY=${APP_DUB_QSTASH_NEXT_SIGNING_KEY:-}
+      - TINYBIRD_API_KEY=${APP_DUB_TINYBIRD_API_KEY:-}
+      - TINYBIRD_API_URL=${APP_DUB_TINYBIRD_API_URL:-https://api.tinybird.co}
+      - RESEND_API_KEY=${APP_DUB_RESEND_API_KEY:-}
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_USER=${APP_DUB_SMTP_USER:-smtpUser}
+      - SMTP_PASSWORD=${APP_DUB_SMTP_PASSWORD:-smtpPassword}
+      - GITHUB_CLIENT_ID=${APP_DUB_GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${APP_DUB_GITHUB_CLIENT_SECRET:-}
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${APP_DUB_STRIPE_PUBLISHABLE_KEY:-123}
+      - STRIPE_SECRET_KEY=${APP_DUB_STRIPE_SECRET_KEY:-123}
+      - STRIPE_WEBHOOK_SECRET=${APP_DUB_STRIPE_WEBHOOK_SECRET:-123}
+      - STRIPE_APP_WEBHOOK_SECRET=${APP_DUB_STRIPE_APP_WEBHOOK_SECRET:-123}
+    depends_on:
+      db:
+        condition: service_healthy
+      ps-proxy:
+        condition: service_started
+      mailhog:
+        condition: service_started
+
+  db:
+    image: mysql:8.0
+    restart: on-failure
+    command:
+      - --max_connections=1000
+      - --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_DATABASE=dub
+      - MYSQL_ROOT_PASSWORD=${APP_PASSWORD}
+      - MYSQL_ROOT_HOST=%
+    volumes:
+      - ${APP_DATA_DIR}/mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  ps-proxy:
+    image: ghcr.io/mattrobenolt/ps-http-sim:latest
+    restart: on-failure
+    command:
+      - -listen-port=3900
+      - -mysql-addr=db
+      - -mysql-dbname=dub
+    depends_on:
+      db:
+        condition: service_healthy
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: on-failure
+    volumes:
+      - ${APP_DATA_DIR}/mailhog_data:/maildir
