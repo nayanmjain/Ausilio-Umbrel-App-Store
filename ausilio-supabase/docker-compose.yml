@@ -313,7 +313,12 @@ services:
       - ${APP_DATA_DIR}/db-init/97-_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
       - ${APP_DATA_DIR}/db-init/99-logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:ro
       - ${APP_DATA_DIR}/db-init/99-pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:ro
-      - ${APP_DATA_DIR}/db-config:/etc/postgresql-custom
+      # Named volume (not a bind mount): Docker pre-populates it with the
+      # image's baked /etc/postgresql-custom content (read-replica.conf,
+      # conf.d, ...), which postgresql.conf actively includes. An empty bind
+      # mount here hides those files and Postgres fatals on startup.
+      # It also persists the pgsodium decryption key across restarts.
+      - db-config:/etc/postgresql-custom
       - ${APP_DATA_DIR}/db/data:/var/lib/postgresql/data
     healthcheck:
       test:
@@ -325,9 +330,12 @@ services:
           "-h",
           "localhost"
         ]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 12
+      # First boot runs initdb + all extensions/migrations and can take minutes
+      # on slow disks; don't count failures during that window.
+      start_period: 120s
     environment:
       POSTGRES_HOST: /var/run/postgresql
       PGPORT: 5432
@@ -345,3 +353,8 @@ services:
         "-c",
         "log_min_messages=fatal"
       ]
+
+volumes:
+  # Project-prefixed to ausilio-supabase_db-config. Must stay a named volume
+  # (see comment on the db service mount): Docker seeds it from the image.
+  db-config:

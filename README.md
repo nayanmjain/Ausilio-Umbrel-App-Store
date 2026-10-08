@@ -45,7 +45,13 @@ Community Umbrel app store (`id: ausilio`).
   `/storage/v1`, `/functions/v1`). Envoy configs and Postgres init SQL are snapshotted
   from upstream `supabase/supabase:docker` and provisioned into `${APP_DATA_DIR}` by
   `exports.sh`, which also derives the HS256 `JWT_SECRET` plus anon/service_role API
-  keys deterministically. Dashboard login is `admin` / `${APP_PASSWORD}` (basic auth);
+  keys deterministically. The Postgres `db-config` mount must stay a named volume:
+  Docker seeds it with the image's baked `/etc/postgresql-custom` content
+  (`read-replica.conf`, `conf.d`), which `postgresql.conf` actively includes; an
+  empty bind mount hides those files and Postgres fatals on startup. If a previous
+  install failed mid-init, delete the half-initialized database dir before
+  reinstalling (`sudo rm -rf ~/umbrel/app-data/ausilio-supabase/db`), or the
+  entrypoint will skip the Supabase init scripts as "already initialized". Dashboard login is `admin` / `${APP_PASSWORD}` (basic auth);
   anon/service keys are shown in Studio API settings. Email confirmation is
   auto-approved (no SMTP on Umbrel); phone auth is disabled. Supavisor is omitted
   (services connect to Postgres directly). Needs 2GB+ RAM (10 services).

@@ -31,7 +31,7 @@ unset -f _supabase_sign_key _supabase_b64url 2>/dev/null || true
 # --- Data directories ---
 mkdir -p "${APP_DATA_DIR}/envoy" "${APP_DATA_DIR}/db-init" "${APP_DATA_DIR}/functions/main" \
   "${APP_DATA_DIR}/functions/hello" "${APP_DATA_DIR}/storage" "${APP_DATA_DIR}/snippets" \
-  "${APP_DATA_DIR}/db/data" "${APP_DATA_DIR}/db-config" "${APP_DATA_DIR}/deno-cache" 2>/dev/null || true
+  "${APP_DATA_DIR}/db/data" "${APP_DATA_DIR}/deno-cache" 2>/dev/null || true
 
 # --- Managed files (rewritten every start; do not edit, they track upstream) ---
 
