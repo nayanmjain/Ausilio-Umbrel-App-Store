@@ -37,6 +37,7 @@ jobs:
           # drive the manifest version.
           PRIMARY_IMAGE = {
               "ausilio-appflowy": r"appflowyinc/appflowy_cloud:",
+              "ausilio-baserow": r"baserow/baserow:",
               "ausilio-cal-diy": r"calcom/cal\.com:",
               "ausilio-documenso": r"documenso/documenso:",
               "ausilio-erpnext": r"frappe/erpnext:",
@@ -108,8 +109,11 @@ jobs:
                   print(f"SKIP {app_dir}: image '{primary}' has no usable tag.")
                   continue
               old_version = str(data.get("version", ""))
-              if old_version == new_version:
-                  print(f"OK {app_dir}: already at {new_version}.")
+              # Ignore a trailing packaging revision (e.g. 2.4.0-1) so a
+              # packaging-only bump is never "downgraded" to the bare tag.
+              old_base = re.sub(r"-\d+$", "", old_version)
+              if old_base == new_version:
+                  print(f"OK {app_dir}: already at {new_version} (manifest {old_version}).")
                   continue
               data["version"] = new_version
               data["submissionDate"] = datetime.date.today().isoformat()
