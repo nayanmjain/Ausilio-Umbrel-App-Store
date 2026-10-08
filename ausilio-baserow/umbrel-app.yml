@@ -1,0 +1,28 @@
+manifestVersion: 1
+id: ausilio-baserow
+name: Baserow
+category: productivity
+version: "2.4.0"
+tagline: Open-source no-code database and Airtable alternative
+description: >-
+  Baserow is an open-source online database: build tables, grid, kanban,
+  calendar and form views, collaborate in realtime, and automate with a REST
+  API and webhooks, all from your browser. This package runs the official
+  all-in-one image (embedded Postgres and Redis behind Caddy); all data
+  persists in the app data directory.
+
+
+  Open the app and create the first account - it claims instance ownership
+  (admin). No SMTP server is configured, so email invites and password resets
+  will not send. Needs 2GB+ RAM.
+developer: Baserow
+website: https://baserow.io
+dependencies: []
+repo: https://github.com/baserow/baserow
+support: https://github.com/baserow/baserow/issues
+port: 8092
+icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/baserow.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-08"
