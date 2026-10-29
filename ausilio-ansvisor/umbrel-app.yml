@@ -1,0 +1,39 @@
+manifestVersion: 1
+id: ausilio-ansvisor
+name: Ansvisor
+category: ai
+version: "0.3.0"
+tagline: Open-source agentic AI Search Execution Platform
+description: >-
+  Ansvisor is a self-hosted, agentic AI Search Execution Platform. It shows how
+  your brand appears in AI answers (ChatGPT, Claude, Gemini, Google AI
+  Overviews / AI Mode, Perplexity, Microsoft Copilot, Grok), finds opportunities,
+  and turns signals into prioritized actions with agent-drafted fixes you approve
+  before anything ships.
+
+  Track prompts, mentions, citations, competitors, AI traffic, and the sources AI
+  systems rely on. Then act on them in one place: plan content, let the Content
+  Agent draft and fix pages, and follow every action against your AI Search KPIs.
+
+  External services required (free tiers work):
+  - Supabase project (database, auth, API) — get URL + keys from
+    https://supabase.com
+  - At least one AI provider key: OpenAI, Anthropic (Claude), or Google (Gemini)
+  - Cloro API key — web scraping for AI platform responses
+    (https://cloro.ai)
+
+  Set these as app environment overrides before first start:
+  SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+  OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY (at least
+  one), CLORO_API_KEY. CRON_SECRET is derived automatically.
+developer: Ansvisor
+website: https://ansvisor.com
+dependencies: []
+repo: https://github.com/ansvisor/ansvisor
+support: https://github.com/ansvisor/ansvisor/issues
+port: 8093
+icon: https://avatars.githubusercontent.com/u/274837157?v=4
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-29"

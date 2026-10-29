@@ -17,6 +17,7 @@ Community Umbrel app store (`id: ausilio`).
 | Shlink (`ausilio-shlink`) | 5.1.7 | 8090 | networking |
 | Dub (`ausilio-dub`) | 2026.10.08 | 8091 | networking |
 | Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
+| Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | ai |
 
 ## Notes
 
@@ -89,6 +90,17 @@ Community Umbrel app store (`id: ausilio`).
   shows "Site not found" when the browser URL host differs from
   `BASEROW_PUBLIC_URL`. Needs 2GB+ RAM.
   First boot applies migrations and can take several minutes.
+
+- Ansvisor (`ausilio-ansvisor`) is the open-source agentic AI Search Execution
+  Platform (web + server on port 8093). It is NOT fully offline: it requires an
+  external Supabase project (free tier works), at least one AI provider key
+  (OpenAI / Anthropic / Google Gemini), and a Cloro API key for web scraping.
+  Set these as app environment overrides before first start:
+  SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+  OPENAI_API_KEY / ANTHROPIC_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY (at least
+  one), and CLORO_API_KEY. CRON_SECRET and ANSVISOR_ENCRYPTION_KEY are derived
+  automatically and shown in exports.env. Set IS_CLOUD=false (all features
+  unlocked, no Stripe). Data lives in Supabase, not on your Umbrel disk.
 
 ## Validation
 
