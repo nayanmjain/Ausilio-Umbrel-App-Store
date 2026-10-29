@@ -1,0 +1,35 @@
+manifestVersion: 1
+id: ausilio-crm
+name: CRM
+category: productivity
+version: "1.16.0"
+tagline: Agentic-first open source CRM built for AI agents
+description: >-
+  Comp AI CRM is an open-source CRM designed for AI agents. The agent is not a
+  feature bolted onto a form — it is where notes are kept and work is done. It
+  runs on its own schedule against its own work queue, decides what to look at
+  next, and writes findings to the record. The stack is a Next.js front end
+  (:3000), a NestJS API (:3001), and an eve-based research agent (:2000), all
+  backed by Postgres.
+
+  This package builds CRM from pinned upstream source (release branch, v1.16.0)
+  and bundles Postgres, so it runs with all of its dependencies on your Umbrel.
+  Sign-in is controlled by ALLOWED_SIGN_IN (a comma-separated list of email
+  domains and/or addresses) — set it as an app environment override before the
+  first start, otherwise nobody can sign in. Optional keys (Google/Microsoft
+  OAuth, Context, Perplexity, Vercel Blob, AI Gateway) can be added as overrides
+  to unlock Gmail/Calendar sync, logo enrichment, web research, and image
+  storage. Telemetry is disabled by default.
+
+  The first install builds the Next.js/NestJS/agent stack from source and needs
+  4GB+ RAM; give it a non-Pi server or an arm64 box with 4GB.
+developer: Comp AI
+website: https://github.com/trycompai/crm
+dependencies: []
+repo: https://github.com/trycompai/crm
+support: https://github.com/trycompai/crm/issues
+port: 8094
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-10-29"

@@ -1,0 +1,66 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-crm_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ausilio-crm-web:1.16.0
+    restart: on-failure
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:${APP_PASSWORD}@db:5432/crm
+      - BETTER_AUTH_SECRET=${APP_CRM_BETTER_AUTH_SECRET}
+      - ALLOWED_SIGN_IN=${APP_CRM_ALLOWED_SIGN_IN:-}
+      - API_URL=http://${DEVICE_DOMAIN_NAME}:8094
+      - APP_URL=http://${DEVICE_DOMAIN_NAME}:8094
+      - NEXT_PUBLIC_API_URL=http://${DEVICE_DOMAIN_NAME}:8094
+      - AGENT_URL=http://${DEVICE_DOMAIN_NAME}:8094
+      - AGENT_PORT=2000
+      - CRM_TELEMETRY_DISABLED=1
+      - DO_NOT_TRACK=1
+      # Optional integrations — set as app environment overrides to enable.
+      - GOOGLE_CLIENT_ID=${APP_CRM_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${APP_CRM_GOOGLE_CLIENT_SECRET:-}
+      - MICROSOFT_CLIENT_ID=${APP_CRM_MICROSOFT_CLIENT_ID:-}
+      - MICROSOFT_CLIENT_SECRET=${APP_CRM_MICROSOFT_CLIENT_SECRET:-}
+      - MICROSOFT_TENANT_ID=${APP_CRM_MICROSOFT_TENANT_ID:-common}
+      - SLACK_CLIENT_ID=${APP_CRM_SLACK_CLIENT_ID:-}
+      - SLACK_CLIENT_SECRET=${APP_CRM_SLACK_CLIENT_SECRET:-}
+      - PERPLEXITY_API_KEY=${APP_CRM_PERPLEXITY_API_KEY:-}
+      - GITHUB_TOKEN=${APP_CRM_GITHUB_TOKEN:-}
+      - BLOB_READ_WRITE_TOKEN=${APP_CRM_BLOB_READ_WRITE_TOKEN:-}
+      - AI_GATEWAY_API_KEY=${APP_CRM_AI_GATEWAY_API_KEY:-}
+      - REDIS_URL=${APP_CRM_REDIS_URL:-}
+      - CRON_SECRET=${APP_CRM_CRON_SECRET:-}
+      - AGENT_BRIDGE_SECRET=${APP_CRM_AGENT_BRIDGE_SECRET:-}
+      - MCP_ENCRYPTION_KEY=${APP_CRM_MCP_ENCRYPTION_KEY:-}
+      - CHAT_EVENT_ENCRYPTION_KEY=${APP_CRM_CHAT_EVENT_ENCRYPTION_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
+
+  db:
+    image: postgres:17-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
+      - POSTGRES_DB=crm
+    volumes:
+      - ${APP_DATA_DIR}/db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

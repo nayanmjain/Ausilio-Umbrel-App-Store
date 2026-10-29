@@ -18,6 +18,7 @@ Community Umbrel app store (`id: ausilio`).
 | Dub (`ausilio-dub`) | 2026.10.08 | 8091 | networking |
 | Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
 | Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | ai |
+| CRM (`ausilio-crm`) | 1.16.0 | 8094 | productivity |
 
 ## Notes
 
@@ -101,6 +102,18 @@ Community Umbrel app store (`id: ausilio`).
   one), and CLORO_API_KEY. CRON_SECRET and ANSVISOR_ENCRYPTION_KEY are derived
   automatically and shown in exports.env. Set IS_CLOUD=false (all features
   unlocked, no Stripe). Data lives in Supabase, not on your Umbrel disk.
+
+- CRM (`ausilio-crm`) is Comp AI's agentic-first CRM (Next.js front end,
+  NestJS API, eve research agent, Postgres). It is built from pinned upstream
+  source (release branch v1.16.0) because upstream publishes no Docker image,
+  so the first install builds the stack (10-25 min, needs 4GB+ RAM). Postgres
+  is bundled; all data lives under `data/db_data`. Sign-in is gated by
+  `ALLOWED_SIGN_IN` (comma-separated email domains and/or addresses) — set it
+  as an app environment override before the first start, otherwise nobody can
+  sign in. Optional keys (Google/Microsoft OAuth, Context, Perplexity, Vercel
+  Blob, AI Gateway) can be added as overrides. Telemetry is disabled.
+  The app is reachable on port 8094; the API (:3001) and agent (:2000) run
+  internally in the same container.
 
 ## Validation
 
