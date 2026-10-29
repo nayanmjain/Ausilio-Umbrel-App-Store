@@ -30,10 +30,13 @@ echo "[crm] starting API on port 3001..."
 API_PID=$!
 
 echo "[crm] starting agent on port 2000..."
-( cd /app/apps/agent && AGENT_PORT=2000 bun scripts/start.ts ) &
+( cd /app/apps/agent && AGENT_PORT=2000 bunx eve start --port 2000 ) &
 AGENT_PID=$!
 
 trap 'kill "$API_PID" "$AGENT_PID" 2>/dev/null || true' TERM INT
+
+# Give API and agent a moment to bind before the web app starts.
+sleep 5
 
 echo "[crm] starting web app on port 3000..."
 cd /app/apps/app
