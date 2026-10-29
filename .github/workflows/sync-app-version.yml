@@ -41,9 +41,11 @@ jobs:
               "ausilio-cal-diy": r"calcom/cal\.com:",
               "ausilio-documenso": r"documenso/documenso:",
               "ausilio-erpnext": r"frappe/erpnext:",
+              "ausilio-freellmapi": r"ghcr.io/tashfeenahmed/freellmapi:",
               "ausilio-listmonk": r"listmonk/listmonk:",
               "ausilio-openseo": r"every-app/open-seo:",
               "ausilio-paperclip": r"paperclipai/paperclip:",
+              "ausilio-shlink": r"shlinkio/shlink:",
               "ausilio-supabase": r"supabase/studio:",
           }
 

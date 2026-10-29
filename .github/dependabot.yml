@@ -6,6 +6,11 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
   - package-ecosystem: "docker"
+    directory: "/ausilio-baserow"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
     directory: "/ausilio-cal-diy"
     schedule:
       interval: "daily"
@@ -21,6 +26,11 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
   - package-ecosystem: "docker"
+    directory: "/ausilio-freellmapi"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
     directory: "/ausilio-listmonk"
     schedule:
       interval: "daily"
@@ -32,6 +42,16 @@ updates:
     open-pull-requests-limit: 10
   - package-ecosystem: "docker"
     directory: "/ausilio-paperclip"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
+    directory: "/ausilio-shlink"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
+    directory: "/ausilio-supabase"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
