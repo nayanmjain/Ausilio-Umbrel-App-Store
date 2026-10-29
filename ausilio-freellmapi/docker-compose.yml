@@ -6,7 +6,7 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: ghcr.io/tashfeenahmed/freellmapi:v0.13.6
+    image: ghcr.io/tashfeenahmed/freellmapi:v0.16.11
     restart: on-failure
     environment:
       - NODE_ENV=production

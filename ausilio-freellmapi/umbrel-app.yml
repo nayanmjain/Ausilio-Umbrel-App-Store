@@ -2,7 +2,7 @@ manifestVersion: 1
 id: ausilio-freellmapi
 name: FreeLLMAPI
 category: ai
-version: "0.13.6"
+version: "0.16.11"
 tagline: One OpenAI-compatible endpoint for 34 free LLM providers
 description: >-
   FreeLLMAPI aggregates the free tiers of 34 LLM providers (635 model endpoints,
@@ -28,7 +28,7 @@ dependencies: []
 repo: https://github.com/tashfeenahmed/freellmapi
 support: https://github.com/tashfeenahmed/freellmapi/issues
 port: 8089
-icon: https://cdn.jsdelivr.net/gh/tashfeenahmed/freellmapi@v0.13.6/client/public/favicon.svg
+icon: https://cdn.jsdelivr.net/gh/tashfeenahmed/freellmapi@v0.16.11/client/public/favicon.svg
 gallery:
   - 1.png
 path: ""
