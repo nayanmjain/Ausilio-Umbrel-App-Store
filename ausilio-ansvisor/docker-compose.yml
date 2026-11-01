@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ausilio-ansvisor-web:0.3.0
+    pull_policy: build
     restart: on-failure
     environment:
       - NODE_ENV=production

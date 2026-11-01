@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ausilio-crm-web:1.16.0
+    pull_policy: build
     restart: on-failure
     environment:
       - NODE_ENV=production

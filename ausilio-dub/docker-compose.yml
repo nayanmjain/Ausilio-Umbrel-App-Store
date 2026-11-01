@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ausilio-dub-web:2026.10.08
+    pull_policy: build
     restart: on-failure
     environment:
       - NODE_ENV=production
