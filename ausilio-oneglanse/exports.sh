@@ -34,13 +34,45 @@ export APP_ONEGLANSE_OPENAI_BASE_URL="${APP_ONEGLANSE_OPENAI_BASE_URL:-https://a
 export APP_ONEGLANSE_ANALYSIS_OPENAI_API="${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-chat}"
 export APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL="${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-gpt-4o-mini}"
 export APP_ONEGLANSE_DEBUG_ENABLED="${APP_ONEGLANSE_DEBUG_ENABLED:-false}"
-export APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE="${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}"
+export APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE="${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-virtual}"
 
 # Persistent data root. Newer umbrelOS may relocate it away from the app dir.
 export APP_ONEGLANSE_DATA_ROOT="${APP_DATA_ROOT:-${ONEGLANSE_APP_DIR}/data}"
 
 # Public origin used by Better Auth for cookies and origin checks.
 export APP_ONEGLANSE_APP_URL="${APP_ONEGLANSE_APP_URL:-http://${DEVICE_DOMAIN_NAME:-umbrel.local}:8095}"
+
+# Compute trusted origins so Better Auth accepts logins from LAN IPs, localhost, and umbrel domains
+_og_origins=""
+_og_add_origin() {
+  [ -n "$1" ] || return 0
+  case ",${_og_origins}," in
+    *",$1,"*) return 0 ;;
+  esac
+  if [ -z "${_og_origins}" ]; then
+    _og_origins="$1"
+  else
+    _og_origins="${_og_origins},$1"
+  fi
+}
+
+_og_add_origin "${APP_ONEGLANSE_APP_URL}"
+_og_add_origin "http://localhost:8095"
+_og_add_origin "http://127.0.0.1:8095"
+for _og_host in "${DEVICE_HOSTNAME:-}" "${DEVICE_DOMAIN_NAME:-}" "${APP_DOMAIN:-}" umbrel umbrel.local; do
+  if [ -n "${_og_host}" ]; then
+    _og_add_origin "http://${_og_host}:8095"
+    _og_add_origin "https://${_og_host}"
+  fi
+done
+_og_ips="$(hostname --all-ip-addresses 2>/dev/null | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+for _og_ip in ${_og_ips}; do
+  _og_add_origin "http://${_og_ip}:8095"
+done
+unset _og_host _og_ips _og_ip 2>/dev/null || true
+unset -f _og_add_origin 2>/dev/null || true
+
+export APP_ONEGLANSE_BETTER_AUTH_TRUSTED_ORIGINS="${_og_origins}"
 
 # --- Secrets (deterministic per Umbrel seed, stable across restarts/upgrades) ---
 export APP_ONEGLANSE_BETTER_AUTH_SECRET="$(derive_entropy "ausilio-oneglanse-better-auth-secret" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-64)"
@@ -67,6 +99,11 @@ chmod 0777 \
   "${APP_ONEGLANSE_DATA_ROOT}/redis/data" \
   "${APP_ONEGLANSE_DATA_ROOT}/storage" 2>/dev/null || true
 chmod 0755 "${APP_ONEGLANSE_DATA_ROOT}/db-init" "${APP_ONEGLANSE_DATA_ROOT}/clickhouse-init" 2>/dev/null || true
+
+# Ensure Postgres host authentication allows connections from the internal compose network
+if [ -f "${APP_ONEGLANSE_DATA_ROOT}/db/data/pg_hba.conf" ]; then
+  sed -i -E 's/(host\s+all\s+all\s+(all|[0-9a-fA-F\.\:\/]+)\s+)(md5|scram-sha-256|password)/\1trust/g' "${APP_ONEGLANSE_DATA_ROOT}/db/data/pg_hba.conf" 2>/dev/null || true
+fi
 
 # --- Postgres init (pg_cron + http for schedules) ---
 cat > "${APP_ONEGLANSE_DATA_ROOT}/db-init/00-init.sql" <<'ONEGLANSE_EOF_PG_INIT'

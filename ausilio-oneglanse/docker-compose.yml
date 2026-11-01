@@ -16,6 +16,8 @@ services:
       - PORT=3000
       - ONEGLANSE_APP_MODE=self-host
       - APP_URL=${APP_ONEGLANSE_APP_URL}
+      - BETTER_AUTH_URL=${APP_ONEGLANSE_APP_URL}
+      - BETTER_AUTH_TRUSTED_ORIGINS=${APP_ONEGLANSE_BETTER_AUTH_TRUSTED_ORIGINS}
       # Reachable from Postgres/pg_cron as well as from the app containers.
       - API_BASE_URL=http://web:3000
       - BETTER_AUTH_SECRET=${APP_ONEGLANSE_BETTER_AUTH_SECRET}
@@ -41,7 +43,7 @@ services:
       - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
       - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-false}
-      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-virtual}
     volumes:
       # Read-only: the web app only reads provider session/status files.
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage:ro
@@ -116,7 +118,7 @@ services:
       - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
       - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-false}
-      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-virtual}
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage
     # Provider sign-in happens on the user's own computer and is pushed here.
@@ -160,6 +162,7 @@ services:
       - POSTGRES_USER=oneglanse
       - POSTGRES_PASSWORD=${APP_ONEGLANSE_DB_PASSWORD}
       - POSTGRES_DB=oneglanse
+      - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/db-init:/docker-entrypoint-initdb.d:ro
       - ${APP_ONEGLANSE_DATA_ROOT}/db/data:/var/lib/postgresql/data
