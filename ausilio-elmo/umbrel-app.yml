@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: ausilio-elmo
 name: Elmo
-category: ai
+category: marketing-technology
 version: "0.7.7"
 tagline: Self-hosted AI visibility tracking (AEO/GEO)
 description: >-

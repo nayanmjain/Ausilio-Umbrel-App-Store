@@ -19,8 +19,8 @@ Community Umbrel app store (`id: ausilio`).
 | Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
 | Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | ai |
 | CRM (`ausilio-crm`) | 1.16.0 | 8094 | productivity |
-| OneGlanse (`ausilio-oneglanse`) | 0.1.0 | 8095 | ai |
-| Elmo (`ausilio-elmo`) | 0.7.7 | 8096 | ai |
+| OneGlanse (`ausilio-oneglanse`) | 0.1.0 | 8095 | marketing-technology |
+| Elmo (`ausilio-elmo`) | 0.7.7 | 8096 | marketing-technology |
 
 ## Notes
 
