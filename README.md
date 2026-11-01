@@ -8,7 +8,7 @@ Community Umbrel app store (`id: ausilio`).
 | --- | --- | --- | --- |
 | AppFlowy (`ausilio-appflowy`) | 0.17.11 | 8081 | productivity |
 | Cal.com DIY (`ausilio-cal-diy`) | 6.2.0 | 8083 | productivity |
-| Listmonk (`ausilio-listmonk`) | 6.2.0 | 8084 | utilities |
+| Listmonk (`ausilio-listmonk`) | 6.2.0 | 8084 | marketing-technology |
 | Documenso (`ausilio-documenso`) | 2.16.0 | 8085 | productivity |
 | Paperclip (`ausilio-paperclip`) | 2026.916.1 | 8086 | ai |
 | ERPNext (`ausilio-erpnext`) | 16.36.1 | 8087 | finance |
@@ -17,7 +17,7 @@ Community Umbrel app store (`id: ausilio`).
 | Shlink (`ausilio-shlink`) | 5.1.7 | 8090 | networking |
 | Dub (`ausilio-dub`) | 2026.10.08 | 8091 | networking |
 | Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
-| Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | ai |
+| Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | marketing-technology |
 | CRM (`ausilio-crm`) | 1.16.0 | 8094 | productivity |
 | OneGlanse (`ausilio-oneglanse`) | 0.1.0 | 8095 | marketing-technology |
 | Elmo (`ausilio-elmo`) | 0.7.7 | 8096 | marketing-technology |

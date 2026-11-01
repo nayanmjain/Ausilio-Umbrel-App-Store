@@ -1,7 +1,7 @@
 manifestVersion: 1
 id: ausilio-listmonk
 name: Listmonk
-category: utilities
+category: marketing-technology
 version: "6.2.0"
 tagline: High-performance self-hosted newsletter manager
 description: Listmonk is a standalone, self-hosted newsletter and mailing list manager with high performance and low memory footprint.
