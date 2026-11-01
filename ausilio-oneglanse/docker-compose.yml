@@ -10,28 +10,38 @@ services:
   web:
     image: ghcr.io/aryamantodkar/oneglanse-web:sha-1937f11
     restart: unless-stopped
-    env_file:
-      - ./oneglanse-runtime.env
     environment:
-      NODE_ENV: production
-      HOSTNAME: 0.0.0.0
-      PORT: "3000"
-      ONEGLANSE_APP_MODE: self-host
-      APP_URL: ${APP_ONEGLANSE_APP_URL}
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+      - ONEGLANSE_APP_MODE=self-host
+      - APP_URL=${APP_ONEGLANSE_APP_URL}
       # Reachable from Postgres/pg_cron as well as from the app containers.
-      API_BASE_URL: http://web:3000
-      BETTER_AUTH_SECRET: ${APP_ONEGLANSE_BETTER_AUTH_SECRET}
-      INTERNAL_CRON_SECRET: ${APP_ONEGLANSE_INTERNAL_CRON_SECRET}
-      AGENT_AUTH_UPLOAD_TOKEN: ${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
-      AGENT_AUTH_ROOT_DIR: /storage/auth
-      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
-      CLICKHOUSE_URL: http://clickhouse:8123
-      CLICKHOUSE_DB: oneglanse
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}
+      - API_BASE_URL=http://web:3000
+      - BETTER_AUTH_SECRET=${APP_ONEGLANSE_BETTER_AUTH_SECRET}
+      - INTERNAL_CRON_SECRET=${APP_ONEGLANSE_INTERNAL_CRON_SECRET}
+      - AGENT_AUTH_UPLOAD_TOKEN=${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
+      - AGENT_AUTH_ROOT_DIR=/storage/auth
+      - DATABASE_URL=postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+      - CLICKHOUSE_URL=http://clickhouse:8123
+      - CLICKHOUSE_DB=oneglanse
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${APP_ONEGLANSE_REDIS_PASSWORD}
+      - ANALYSIS_LLM_PROVIDER=${APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER:-openai}
+      - OPENAI_API_KEY=${APP_ONEGLANSE_OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${APP_ONEGLANSE_ANTHROPIC_API_KEY:-}
+      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-}
+      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-}
+      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-}
+      - THORDATA_PROXY_API_URL=${APP_ONEGLANSE_THORDATA_PROXY_API_URL:-}
+      - PROXY_SCHEME=${APP_ONEGLANSE_PROXY_SCHEME:-}
+      - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
+      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-}
     volumes:
       # Read-only: the web app only reads provider session/status files.
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage:ro
@@ -63,8 +73,8 @@ services:
     restart: "no"
     working_dir: /workspace
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
     command: pnpm --filter @oneglanse/db db:migrate
     depends_on:
       db:
@@ -76,23 +86,33 @@ services:
     restart: unless-stopped
     stop_grace_period: 16m
     shm_size: "2gb"
-    env_file:
-      - ./oneglanse-runtime.env
     environment:
-      NODE_ENV: production
-      ONEGLANSE_APP_MODE: self-host
-      APP_URL: ${APP_ONEGLANSE_APP_URL}
-      API_BASE_URL: http://web:3000
-      AGENT_AUTH_ROOT_DIR: /storage/auth
-      AGENT_AUTH_UPLOAD_TOKEN: ${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
-      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
-      CLICKHOUSE_URL: http://clickhouse:8123
-      CLICKHOUSE_DB: oneglanse
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}
+      - NODE_ENV=production
+      - ONEGLANSE_APP_MODE=self-host
+      - APP_URL=${APP_ONEGLANSE_APP_URL}
+      - API_BASE_URL=http://web:3000
+      - AGENT_AUTH_ROOT_DIR=/storage/auth
+      - AGENT_AUTH_UPLOAD_TOKEN=${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
+      - DATABASE_URL=postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+      - CLICKHOUSE_URL=http://clickhouse:8123
+      - CLICKHOUSE_DB=oneglanse
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${APP_ONEGLANSE_REDIS_PASSWORD}
+      - ANALYSIS_LLM_PROVIDER=${APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER:-openai}
+      - OPENAI_API_KEY=${APP_ONEGLANSE_OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${APP_ONEGLANSE_ANTHROPIC_API_KEY:-}
+      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-}
+      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-}
+      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-}
+      - THORDATA_PROXY_API_URL=${APP_ONEGLANSE_THORDATA_PROXY_API_URL:-}
+      - PROXY_SCHEME=${APP_ONEGLANSE_PROXY_SCHEME:-}
+      - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
+      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-}
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage
     # Provider sign-in happens on the user's own computer and is pushed here.
@@ -133,9 +153,9 @@ services:
       - -c
       - cron.database_name=oneglanse
     environment:
-      POSTGRES_USER: oneglanse
-      POSTGRES_PASSWORD: ${APP_ONEGLANSE_DB_PASSWORD}
-      POSTGRES_DB: oneglanse
+      - POSTGRES_USER=oneglanse
+      - POSTGRES_PASSWORD=${APP_ONEGLANSE_DB_PASSWORD}
+      - POSTGRES_DB=oneglanse
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/db-init:/docker-entrypoint-initdb.d:ro
       - ${APP_ONEGLANSE_DATA_ROOT}/db/data:/var/lib/postgresql/data
@@ -151,9 +171,9 @@ services:
     image: clickhouse/clickhouse-server:25.8.2.29
     restart: unless-stopped
     environment:
-      CLICKHOUSE_DB: oneglanse
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+      - CLICKHOUSE_DB=oneglanse
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/clickhouse-init:/docker-entrypoint-initdb.d:ro
       - ${APP_ONEGLANSE_DATA_ROOT}/clickhouse/data:/var/lib/clickhouse
@@ -185,4 +205,4 @@ services:
       retries: 10
       start_period: 20s
     environment:
-      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}
+      - REDIS_PASSWORD=${APP_ONEGLANSE_REDIS_PASSWORD}

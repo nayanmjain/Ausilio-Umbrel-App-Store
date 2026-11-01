@@ -1,5 +1,5 @@
 # OneGlanse for Umbrel: derive stable secrets, provision database init files,
-# and render the optional runtime configuration.
+# and export runtime variables.
 # Sourced by Umbrel on install/start. Must stay idempotent and fast.
 #
 # User-editable settings live in a sibling config.env next to this file:
@@ -7,20 +7,32 @@
 # That file is not touched by app updates. It uses shell syntax, e.g.
 #   APP_ONEGLANSE_OPENAI_API_KEY=sk-...
 #   APP_ONEGLANSE_THORDATA_PROXY_API_URL=https://...
-# Everything below only fills in defaults when a value is not already set.
 
 ONEGLANSE_APP_DIR="${APP_DATA_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)}"
 
 if [ -f "${ONEGLANSE_APP_DIR}/config.env" ]; then
+  # shellcheck disable=SC1090
   . "${ONEGLANSE_APP_DIR}/config.env"
 fi
+
+# Normalize variable names from config.env (support both native and prefixed)
+for _og_name in \
+  OPENAI_API_KEY ANTHROPIC_API_KEY OPENAI_BASE_URL ANALYSIS_OPENAI_MODEL \
+  ANALYSIS_OPENAI_API THORDATA_PROXY_API_URL PROXY_SCHEME GOOGLE_CLIENT_ID \
+  GOOGLE_CLIENT_SECRET DEBUG_ENABLED CAMOUFOX_HEADLESS_MODE \
+  ANALYSIS_LLM_PROVIDER APP_URL
+do
+  eval "_og_val=\"\${${_og_name}:-\${APP_ONEGLANSE_${_og_name}:-}}\""
+  if [ -n "${_og_val}" ]; then
+    eval "export APP_ONEGLANSE_${_og_name}=\"\${_og_val}\""
+  fi
+done
+unset _og_name _og_val
 
 # Persistent data root. Newer umbrelOS may relocate it away from the app dir.
 export APP_ONEGLANSE_DATA_ROOT="${APP_DATA_ROOT:-${ONEGLANSE_APP_DIR}/data}"
 
-# Public origin used by Better Auth for cookies and origin checks. Override in
-# config.env (APP_ONEGLANSE_APP_URL) when the app is reached on another
-# hostname, e.g. a Tailscale name or a reverse proxy.
+# Public origin used by Better Auth for cookies and origin checks.
 export APP_ONEGLANSE_APP_URL="${APP_ONEGLANSE_APP_URL:-http://${DEVICE_DOMAIN_NAME:-umbrel.local}:8095}"
 
 # --- Secrets (deterministic per Umbrel seed, stable across restarts/upgrades) ---
@@ -153,38 +165,6 @@ ORDER BY (
 
 ALTER TABLE analytics.prompt_analysis ADD COLUMN IF NOT EXISTS prompt String DEFAULT '';
 ONEGLANSE_EOF_CH_SCHEMA
-
-# --- Optional runtime configuration passed to web + agent via env_file ---
-# Only non-empty values are written, so optional URL/enum variables stay unset
-# and do not fail upstream's strict env validation.
-ONEGLANSE_RUNTIME_ENV="${ONEGLANSE_APP_DIR}/oneglanse-runtime.env"
-: > "${ONEGLANSE_RUNTIME_ENV}"
-
-{
-  printf 'ONEGLANSE_APP_MODE=self-host\n'
-  printf 'ANALYSIS_LLM_PROVIDER=%s\n' "${APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER:-openai}"
-
-  for _og_optional in \
-    OPENAI_API_KEY \
-    ANTHROPIC_API_KEY \
-    OPENAI_BASE_URL \
-    ANALYSIS_OPENAI_MODEL \
-    ANALYSIS_OPENAI_API \
-    THORDATA_PROXY_API_URL \
-    PROXY_SCHEME \
-    GOOGLE_CLIENT_ID \
-    GOOGLE_CLIENT_SECRET \
-    DEBUG_ENABLED \
-    CAMOUFOX_HEADLESS_MODE
-  do
-    eval "_og_value=\"\${APP_ONEGLANSE_${_og_optional}:-}\""
-    if [ -n "${_og_value}" ]; then
-      printf '%s=%s\n' "${_og_optional}" "${_og_value}"
-    fi
-  done
-  unset _og_optional _og_value
-} >> "${ONEGLANSE_RUNTIME_ENV}"
-chmod 600 "${ONEGLANSE_RUNTIME_ENV}" 2>/dev/null || true
 
 # --- Persist derived secrets for the operator ---
 ONEGLANSE_EXPORTS_ENV="${ONEGLANSE_APP_DIR}/exports.env"
