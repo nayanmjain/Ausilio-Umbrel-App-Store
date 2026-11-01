@@ -7,7 +7,7 @@ services:
 
   web:
     build:
-      context: .
+      context: ${APP_CRM_DIR:-${APP_DATA_DIR}}
       dockerfile: Dockerfile
     pull_policy: build
     restart: on-failure

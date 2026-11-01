@@ -7,7 +7,10 @@ ARG ANSVISOR_COMMIT=de1bb6ca7f751808d077e7eb7975bdbe6dfed654
 
 FROM node:20-bookworm AS base
 ARG ANSVISOR_COMMIT
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000 \
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git openssl ca-certificates curl python3 make g++ \

@@ -1,3 +1,6 @@
+APP_CRM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+export APP_CRM_DIR
+
 # CRM for Umbrel: derive stable, per-install secrets.
 # Sourced by Umbrel on install/start. Must stay idempotent and fast so that
 # restarts and upgrades do not rotate secrets (which would invalidate sessions

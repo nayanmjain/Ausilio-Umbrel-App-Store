@@ -1,3 +1,6 @@
+APP_DUB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+export APP_DUB_DIR
+
 # Dub for Umbrel (experimental): derive stable secrets.
 # Sourced by Umbrel on install/start. Must stay idempotent and fast.
 # Secrets are deterministic per Umbrel seed (derive_entropy) so restarts and
