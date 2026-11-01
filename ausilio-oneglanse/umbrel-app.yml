@@ -1,0 +1,53 @@
+manifestVersion: 1
+id: ausilio-oneglanse
+name: OneGlanse
+category: ai
+version: "0.1.0"
+tagline: Open-source AI visibility & GEO tracker
+description: >-
+  OneGlanse tracks how ChatGPT, Perplexity, Gemini, Claude, and Google AI
+  Overview mention and cite your brand. Unlike API-based tools, it opens the
+  real provider websites with an anti-fingerprint Camoufox browser and captures
+  the answers, citations, source cards, and recommendation ordering users
+  actually see.
+
+  Add your brand, competitors, and prompts; run them manually or on a recurring
+  schedule; and review visibility, rank, sentiment, recommendations, sources,
+  and changes over time. The full stack runs locally on your Umbrel: Next.js web
+  app, browser agent worker, Postgres, ClickHouse, and Redis.
+
+
+  Requirements:
+
+  - An OpenAI or Anthropic API key for response analysis. Add it to
+  ~/umbrel/app-data/ausilio-oneglanse/config.env as
+  APP_ONEGLANSE_OPENAI_API_KEY=... (or APP_ONEGLANSE_ANTHROPIC_API_KEY=... plus
+  APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER=claude).
+
+  - Accounts for the AI products you want to track. Provider sign-in must be
+  captured on your own computer, then uploaded to this app's agent API on port
+  3333. The bearer token is in
+  ~/umbrel/app-data/ausilio-oneglanse/exports.env.
+
+  - A residential proxy endpoint (ThorData) for provider browser traffic. Set
+  APP_ONEGLANSE_THORDATA_PROXY_API_URL=... in the same config.env file. Prompt
+  runs fail without it while the app is in self-hosted mode.
+
+
+  The web app has its own email/password signup with no SMTP configured, so
+  there is no email verification or password reset, and anyone who can reach
+  the app can create an account. Keep it on your LAN. Needs 8GB+ RAM and about
+  20GB of disk for the Camoufox runtime and analytics data. Anonymous PostHog
+  signup/activity events (hashed user ID only) are sent by upstream and cannot
+  be disabled.
+developer: OneGlanse
+website: https://oneglanse.com
+dependencies: []
+repo: https://github.com/oneglanse/oneglanse
+support: https://github.com/oneglanse/oneglanse/issues
+port: 8095
+icon: https://cdn.jsdelivr.net/gh/oneglanse/oneglanse@1937f114ccb28f2fba71dbcf1db494dac6050630/apps/web/src/app/icon.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-11-01"

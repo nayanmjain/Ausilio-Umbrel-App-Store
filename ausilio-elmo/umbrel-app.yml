@@ -1,0 +1,37 @@
+manifestVersion: 1
+id: ausilio-elmo
+name: Elmo
+category: ai
+version: "0.7.7"
+tagline: Self-hosted AI visibility tracking (AEO/GEO)
+description: >-
+  Elmo tracks how ChatGPT, Google AI Overviews, Google AI Mode, Gemini,
+  Perplexity, Copilot, Claude, and other AI answer engines mention and cite
+  your brand. Run prompts on a schedule, measure share of voice, sentiment,
+  citations, and query fan-out, and turn the results into ranked opportunities
+  and reports.
+
+  This package runs the full stack on your Umbrel: the web dashboard and
+  REST/MCP API, the background worker, and a bundled PostgreSQL database.
+  Add at least one tracking provider (BrightData, Cloro, SearchApi, Olostep,
+  Oxylabs, DataForSEO, or a direct OpenAI/Anthropic/OpenRouter/Mistral API) and
+  a Jev judge key (TypeSafe, or OpenRouter) in
+  ~/umbrel/app-data/ausilio-elmo/config.env, then restart the app.
+  SCRAPE_TARGETS is derived from the first configured provider unless you set
+  it explicitly. A single OpenRouter key is enough to start: it tracks Claude,
+  powers onboarding, and calls Jev.
+
+  The first browser signup claims the instance. No SMTP is configured, so
+  there is no email verification or password reset. AI provider usage is
+  billed by those providers. Needs 2GB+ RAM. Telemetry is disabled by default.
+developer: Elmo
+website: https://www.elmohq.com
+dependencies: []
+repo: https://github.com/elmohq/elmo
+support: https://github.com/elmohq/elmo/issues
+port: 8096
+icon: https://cdn.jsdelivr.net/gh/elmohq/elmo@v0.7.7/apps/web/public/icons/elmo-icon-512.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-11-01"

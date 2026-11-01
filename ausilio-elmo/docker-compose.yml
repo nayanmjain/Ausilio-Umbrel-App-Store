@@ -1,0 +1,68 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-elmo_web_1
+      APP_PORT: 3000
+      # Elmo has its own email/password auth; do not stack Umbrel basic auth.
+      PROXY_AUTH_ADD: "false"
+
+  # TanStack Start dashboard, REST API, and MCP endpoint.
+  web:
+    image: elmohq/elmo-web:0.7.7
+    restart: unless-stopped
+    env_file:
+      - ./elmo-runtime.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  # Background scheduler/worker. It exits when no Jev key (TypeSafe or
+  # OpenRouter) or no usable SCRAPE_TARGETS is configured, so keep the retry
+  # budget small; a restart from Umbrel picks up config.env changes.
+  worker:
+    image: elmohq/elmo-worker:0.7.7
+    restart: "on-failure:5"
+    stop_grace_period: 35s
+    env_file:
+      - ./elmo-runtime.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      db-migrate:
+        condition: service_completed_successfully
+
+  # One-shot Drizzle migration runner, re-run on every image upgrade.
+  db-migrate:
+    image: elmohq/elmo-db-migrate:0.7.7
+    restart: "no"
+    environment:
+      DATABASE_URL: postgres://postgres:${APP_ELMO_DB_PASSWORD}@postgres:5432/elmo
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Bundled database. Postgres 18 keeps PGDATA in a version-specific child
+  # directory, so the volume is mounted one level up at /var/lib/postgresql.
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${APP_ELMO_DB_PASSWORD}
+      POSTGRES_DB: elmo
+    volumes:
+      - ${APP_DATA_DIR}/postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d elmo"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s

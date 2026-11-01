@@ -1,0 +1,188 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-oneglanse_web_1
+      APP_PORT: 3000
+      # OneGlanse has its own email/password auth; do not stack Umbrel basic auth.
+      PROXY_AUTH_ADD: "false"
+
+  # Next.js UI + tRPC API. Also serves the internal cron callback used by pg_cron.
+  web:
+    image: ghcr.io/aryamantodkar/oneglanse-web:sha-1937f11
+    restart: unless-stopped
+    env_file:
+      - ./oneglanse-runtime.env
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      ONEGLANSE_APP_MODE: self-host
+      APP_URL: ${APP_ONEGLANSE_APP_URL}
+      # Reachable from Postgres/pg_cron as well as from the app containers.
+      API_BASE_URL: http://web:3000
+      BETTER_AUTH_SECRET: ${APP_ONEGLANSE_BETTER_AUTH_SECRET}
+      INTERNAL_CRON_SECRET: ${APP_ONEGLANSE_INTERNAL_CRON_SECRET}
+      AGENT_AUTH_UPLOAD_TOKEN: ${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
+      AGENT_AUTH_ROOT_DIR: /storage/auth
+      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DB: oneglanse
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}
+    volumes:
+      # Read-only: the web app only reads provider session/status files.
+      - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/login').then((r) => { if (r.status >= 500) process.exit(1) }).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # One-shot Drizzle migrations. Runs on install, start, and every upgrade.
+  migrate:
+    image: ghcr.io/aryamantodkar/oneglanse-web:sha-1937f11
+    restart: "no"
+    working_dir: /workspace
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+    command: pnpm --filter @oneglanse/db db:migrate
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # BullMQ worker + Camoufox browser runtime + provider session upload API.
+  agent:
+    image: ghcr.io/aryamantodkar/oneglanse-agent:sha-1937f11
+    restart: unless-stopped
+    stop_grace_period: 16m
+    shm_size: "2gb"
+    env_file:
+      - ./oneglanse-runtime.env
+    environment:
+      NODE_ENV: production
+      ONEGLANSE_APP_MODE: self-host
+      APP_URL: ${APP_ONEGLANSE_APP_URL}
+      API_BASE_URL: http://web:3000
+      AGENT_AUTH_ROOT_DIR: /storage/auth
+      AGENT_AUTH_UPLOAD_TOKEN: ${APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN}
+      DATABASE_URL: postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DB: oneglanse
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}
+    volumes:
+      - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage
+    # Provider sign-in happens on the user's own computer and is pushed here.
+    # Exposed on the LAN so `pnpm auth` / `pnpm upload:vps` can reach it.
+    ports:
+      - "3333:3333"
+    depends_on:
+      db:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3333/health').then((r) => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # Postgres with pg_cron + http extensions (custom upstream image), used for
+  # schedules and internal cron callbacks.
+  db:
+    image: ghcr.io/aryamantodkar/oneglanse-postgres:sha-1937f11
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_cron
+      - -c
+      - cron.database_name=oneglanse
+    environment:
+      POSTGRES_USER: oneglanse
+      POSTGRES_PASSWORD: ${APP_ONEGLANSE_DB_PASSWORD}
+      POSTGRES_DB: oneglanse
+    volumes:
+      - ${APP_ONEGLANSE_DATA_ROOT}/db-init:/docker-entrypoint-initdb.d:ro
+      - ${APP_ONEGLANSE_DATA_ROOT}/db/data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oneglanse -d oneglanse"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  # ClickHouse stores prompts, captured responses, citations, and analysis.
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.8.2.29
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: oneglanse
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${APP_ONEGLANSE_CLICKHOUSE_PASSWORD}
+    volumes:
+      - ${APP_ONEGLANSE_DATA_ROOT}/clickhouse-init:/docker-entrypoint-initdb.d:ro
+      - ${APP_ONEGLANSE_DATA_ROOT}/clickhouse/data:/var/lib/clickhouse
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "clickhouse-client --user \"$${CLICKHOUSE_USER}\" --password \"$${CLICKHOUSE_PASSWORD}\" --query 'SELECT 1'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: redis-server --requirepass ${APP_ONEGLANSE_REDIS_PASSWORD}
+    volumes:
+      - ${APP_ONEGLANSE_DATA_ROOT}/redis/data:/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    environment:
+      REDIS_PASSWORD: ${APP_ONEGLANSE_REDIS_PASSWORD}

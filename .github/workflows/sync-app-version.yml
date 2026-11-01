@@ -40,6 +40,7 @@ jobs:
               "ausilio-baserow": r"baserow/baserow:",
               "ausilio-cal-diy": r"calcom/cal\.com:",
               "ausilio-documenso": r"documenso/documenso:",
+              "ausilio-elmo": r"elmohq/elmo-web:",
               "ausilio-erpnext": r"frappe/erpnext:",
               "ausilio-freellmapi": r"ghcr.io/tashfeenahmed/freellmapi:",
               "ausilio-listmonk": r"listmonk/listmonk:",

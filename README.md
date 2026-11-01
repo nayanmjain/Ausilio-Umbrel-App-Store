@@ -19,6 +19,8 @@ Community Umbrel app store (`id: ausilio`).
 | Baserow (`ausilio-baserow`) | 2.4.0-1 | 8092 | productivity |
 | Ansvisor (`ausilio-ansvisor`) | 0.3.0 | 8093 | ai |
 | CRM (`ausilio-crm`) | 1.16.0 | 8094 | productivity |
+| OneGlanse (`ausilio-oneglanse`) | 0.1.0 | 8095 | ai |
+| Elmo (`ausilio-elmo`) | 0.7.7 | 8096 | ai |
 
 ## Notes
 
@@ -114,6 +116,65 @@ Community Umbrel app store (`id: ausilio`).
   Blob, AI Gateway) can be added as overrides. Telemetry is disabled.
   The app is reachable on port 8094; the API (:3001) and agent (:2000) run
   internally in the same container.
+
+- OneGlanse (`ausilio-oneglanse`) is the open-source AI visibility / GEO
+  tracker (Next.js web app, Camoufox browser agent, Postgres + pg_cron,
+  ClickHouse, Redis) on port 8095. Images are pinned to
+  `ghcr.io/aryamantodkar/oneglanse-*:sha-1937f11`: upstream's compose now
+  points at `ghcr.io/oneglanse/*`, but those packages were never published
+  under the new org name, so the old namespace is the only working multi-arch
+  registry. This is a self-hosted deployment (`ONEGLANSE_APP_MODE=self-host`):
+  recurring schedules and people management are enabled, but provider sign-in
+  must be captured on your computer and pushed to the agent API on host port
+  `3333`. On a laptop, clone `oneglanse/oneglanse`, run `pnpm install`, then
+  `ONEGLANSE_VPS_IP=<umbrel-ip> AGENT_AUTH_UPLOAD_TOKEN=<token> pnpm auth`
+  (token in `~/umbrel/app-data/ausilio-oneglanse/exports.env`); later re-pushes
+  can use `pnpm upload:vps` with the same variables. Set optional keys in
+  `~/umbrel/app-data/ausilio-oneglanse/config.env` (sourced by `exports.sh`
+  and survives updates): `APP_ONEGLANSE_OPENAI_API_KEY` or
+  `APP_ONEGLANSE_ANTHROPIC_API_KEY` + `APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER=claude`
+  for analysis, and `APP_ONEGLANSE_THORDATA_PROXY_API_URL` for provider
+  browser traffic (required in self-host mode even on a home connection). Set
+  `APP_ONEGLANSE_APP_URL` there if you reach the app on a hostname other than
+  `<device>.local` (for example a Tailscale name or reverse proxy), so Better
+  Auth accepts sign-in from that origin.
+  `DATABASE_URL`, auth/cron secrets, Redis, and ClickHouse passwords are
+  derived from the Umbrel seed and stay stable across restarts/upgrades. Signup
+  is open (each user gets their own workspace), there is no SMTP so no email
+  verification or password reset, and Umbrel's proxy auth is disabled because
+  the app has its own login — keep the app on your LAN. Needs 8GB+ RAM
+  (Camoufox + ClickHouse + Postgres) and ~20GB disk. Upstream sends anonymous
+  PostHog signup/activity events (SHA-256 hashed user ID only) with no opt-out.
+
+- Elmo (`ausilio-elmo`) is the open-source AI visibility / AEO tracker
+  (TanStack Start web app, background worker, Postgres) on port 8096. It runs
+  the official multi-arch `elmohq/elmo-web:0.7.7`,
+  `elmohq/elmo-worker:0.7.7`, and `elmohq/elmo-db-migrate:0.7.7` images plus
+  `postgres:18-alpine`; the migration container runs on every start/upgrade and
+  the database lives in `${APP_DATA_DIR}/postgres_data` (mounted one level above
+  PGDATA, as Postgres 18 requires). Provider keys go in
+  `~/umbrel/app-data/ausilio-elmo/config.env` (sourced by `exports.sh`, survives
+  updates; see `config.env.example`), not upstream's `~/.elmo/.env`. At least
+  one direct LLM key (OpenRouter, OpenAI, Anthropic, or Mistral) is needed
+  before the dashboard is usable: it powers onboarding/reports, and an
+  OpenRouter key also calls Jev. Mention judging needs `TYPESAFE_API_KEY` or
+  `OPENROUTER_API_KEY`, otherwise the worker exits after five retries. Add a
+  scraper key (BrightData, Cloro, SearchApi, Olostep, Oxylabs, DataForSEO) to
+  track live ChatGPT/Google AI surfaces; `SCRAPE_TARGETS` is derived from the
+  first configured provider and can be overridden. `BETTER_AUTH_SECRET`,
+  the 32-byte base64 `ELMO_ENCRYPTION_KEY`, and the Postgres password are
+  derived from the Umbrel seed and written to `exports.env`; keep the
+  encryption key with any database backup, and after restoring onto another
+  device add the old value as `ELMO_ENCRYPTION_KEY_OLD` in `config.env` so
+  stored credentials stay readable. `APP_URL` defaults to
+  `http://localhost:8096` because Elmo refuses to start when its MCP endpoint
+  would advertise a plain-HTTP non-localhost origin; browser sign-in from the
+  LAN still works because `exports.sh` registers the device hostname/domain and
+  LAN IPs in `BETTER_AUTH_TRUSTED_ORIGINS`. Set `APP_URL=https://...` only when
+  serving Elmo through an HTTPS domain (MCP then advertises it and sign-in is
+  restricted to it). First browser signup claims the instance; no SMTP, so
+  there is no email verification or password reset. Telemetry is disabled.
+  Needs 2GB+ RAM.
 
 ## Validation
 
