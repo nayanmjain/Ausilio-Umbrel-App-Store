@@ -33,15 +33,15 @@ services:
       - ANALYSIS_LLM_PROVIDER=${APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER:-openai}
       - OPENAI_API_KEY=${APP_ONEGLANSE_OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${APP_ONEGLANSE_ANTHROPIC_API_KEY:-}
-      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-}
-      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-}
-      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-}
+      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-gpt-4o-mini}
+      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-chat}
       - THORDATA_PROXY_API_URL=${APP_ONEGLANSE_THORDATA_PROXY_API_URL:-}
       - PROXY_SCHEME=${APP_ONEGLANSE_PROXY_SCHEME:-}
       - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
-      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-}
-      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-}
+      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-false}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}
     volumes:
       # Read-only: the web app only reads provider session/status files.
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage:ro
@@ -75,7 +75,11 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://oneglanse:${APP_ONEGLANSE_DB_PASSWORD}@db:5432/oneglanse
-    command: pnpm --filter @oneglanse/db db:migrate
+    command: >
+      sh -c "until pnpm --filter @oneglanse/db db:migrate; do
+        echo 'Migration waiting for postgres...';
+        sleep 2;
+      done"
     depends_on:
       db:
         condition: service_healthy
@@ -104,15 +108,15 @@ services:
       - ANALYSIS_LLM_PROVIDER=${APP_ONEGLANSE_ANALYSIS_LLM_PROVIDER:-openai}
       - OPENAI_API_KEY=${APP_ONEGLANSE_OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${APP_ONEGLANSE_ANTHROPIC_API_KEY:-}
-      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-}
-      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-}
-      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-}
+      - OPENAI_BASE_URL=${APP_ONEGLANSE_OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - ANALYSIS_OPENAI_MODEL=${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-gpt-4o-mini}
+      - ANALYSIS_OPENAI_API=${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-chat}
       - THORDATA_PROXY_API_URL=${APP_ONEGLANSE_THORDATA_PROXY_API_URL:-}
       - PROXY_SCHEME=${APP_ONEGLANSE_PROXY_SCHEME:-}
       - GOOGLE_CLIENT_ID=${APP_ONEGLANSE_GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${APP_ONEGLANSE_GOOGLE_CLIENT_SECRET:-}
-      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-}
-      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-}
+      - DEBUG_ENABLED=${APP_ONEGLANSE_DEBUG_ENABLED:-false}
+      - CAMOUFOX_HEADLESS_MODE=${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}
     volumes:
       - ${APP_ONEGLANSE_DATA_ROOT}/storage:/storage
     # Provider sign-in happens on the user's own computer and is pushed here.
@@ -160,7 +164,7 @@ services:
       - ${APP_ONEGLANSE_DATA_ROOT}/db-init:/docker-entrypoint-initdb.d:ro
       - ${APP_ONEGLANSE_DATA_ROOT}/db/data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U oneglanse -d oneglanse"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U oneglanse -d oneglanse"]
       interval: 10s
       timeout: 5s
       retries: 12

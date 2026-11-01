@@ -29,6 +29,13 @@ do
 done
 unset _og_name _og_val
 
+# Defaults for required analysis schema properties so Zod validation passes out-of-the-box
+export APP_ONEGLANSE_OPENAI_BASE_URL="${APP_ONEGLANSE_OPENAI_BASE_URL:-https://api.openai.com/v1}"
+export APP_ONEGLANSE_ANALYSIS_OPENAI_API="${APP_ONEGLANSE_ANALYSIS_OPENAI_API:-chat}"
+export APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL="${APP_ONEGLANSE_ANALYSIS_OPENAI_MODEL:-gpt-4o-mini}"
+export APP_ONEGLANSE_DEBUG_ENABLED="${APP_ONEGLANSE_DEBUG_ENABLED:-false}"
+export APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE="${APP_ONEGLANSE_CAMOUFOX_HEADLESS_MODE:-true}"
+
 # Persistent data root. Newer umbrelOS may relocate it away from the app dir.
 export APP_ONEGLANSE_DATA_ROOT="${APP_DATA_ROOT:-${ONEGLANSE_APP_DIR}/data}"
 
@@ -36,12 +43,12 @@ export APP_ONEGLANSE_DATA_ROOT="${APP_DATA_ROOT:-${ONEGLANSE_APP_DIR}/data}"
 export APP_ONEGLANSE_APP_URL="${APP_ONEGLANSE_APP_URL:-http://${DEVICE_DOMAIN_NAME:-umbrel.local}:8095}"
 
 # --- Secrets (deterministic per Umbrel seed, stable across restarts/upgrades) ---
-export APP_ONEGLANSE_BETTER_AUTH_SECRET="$(derive_entropy "ausilio-oneglanse-better-auth-secret" | cut -c1-64)"
-export APP_ONEGLANSE_INTERNAL_CRON_SECRET="$(derive_entropy "ausilio-oneglanse-internal-cron-secret" | cut -c1-64)"
-export APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN="$(derive_entropy "ausilio-oneglanse-agent-auth-upload-token" | cut -c1-64)"
-export APP_ONEGLANSE_DB_PASSWORD="$(derive_entropy "ausilio-oneglanse-db-password" | cut -c1-32)"
-export APP_ONEGLANSE_REDIS_PASSWORD="$(derive_entropy "ausilio-oneglanse-redis-password" | cut -c1-32)"
-export APP_ONEGLANSE_CLICKHOUSE_PASSWORD="$(derive_entropy "ausilio-oneglanse-clickhouse-password" | cut -c1-32)"
+export APP_ONEGLANSE_BETTER_AUTH_SECRET="$(derive_entropy "ausilio-oneglanse-better-auth-secret" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-64)"
+export APP_ONEGLANSE_INTERNAL_CRON_SECRET="$(derive_entropy "ausilio-oneglanse-internal-cron-secret" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-64)"
+export APP_ONEGLANSE_AGENT_AUTH_UPLOAD_TOKEN="$(derive_entropy "ausilio-oneglanse-agent-auth-upload-token" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-64)"
+export APP_ONEGLANSE_DB_PASSWORD="$(derive_entropy "ausilio-oneglanse-db-password" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-32)"
+export APP_ONEGLANSE_REDIS_PASSWORD="$(derive_entropy "ausilio-oneglanse-redis-password" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-32)"
+export APP_ONEGLANSE_CLICKHOUSE_PASSWORD="$(derive_entropy "ausilio-oneglanse-clickhouse-password" | openssl dgst -sha256 -hex | awk '{print $2}' | cut -c1-32)"
 
 # --- Data directories ---
 mkdir -p \
@@ -109,6 +116,7 @@ ONEGLANSE_EOF_PG_INIT
 # --- ClickHouse init (prompts, responses, citations, analysis) ---
 cat > "${APP_ONEGLANSE_DATA_ROOT}/clickhouse-init/schema.sql" <<'ONEGLANSE_EOF_CH_SCHEMA'
 CREATE DATABASE IF NOT EXISTS analytics;
+CREATE DATABASE IF NOT EXISTS oneglanse;
 
 CREATE TABLE IF NOT EXISTS analytics.user_prompts (
     id String,
@@ -164,6 +172,10 @@ ORDER BY (
 );
 
 ALTER TABLE analytics.prompt_analysis ADD COLUMN IF NOT EXISTS prompt String DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS oneglanse.user_prompts AS analytics.user_prompts;
+CREATE TABLE IF NOT EXISTS oneglanse.prompt_responses AS analytics.prompt_responses;
+CREATE TABLE IF NOT EXISTS oneglanse.prompt_analysis AS analytics.prompt_analysis;
 ONEGLANSE_EOF_CH_SCHEMA
 
 # --- Persist derived secrets for the operator ---
