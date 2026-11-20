@@ -47,6 +47,12 @@ mkdir -p \
   "${APP_HYPERSWITCH_DATA_ROOT}/migrations" \
   "${APP_HYPERSWITCH_DATA_ROOT}/bin" 2>/dev/null || true
 
+chmod 0777 \
+  "${APP_HYPERSWITCH_DATA_ROOT}/pgdata" \
+  "${APP_HYPERSWITCH_DATA_ROOT}/redisdata" \
+  "${APP_HYPERSWITCH_DATA_ROOT}/migrations" \
+  "${APP_HYPERSWITCH_DATA_ROOT}/bin" 2>/dev/null || true
+
 # Provision gateway configuration
 if [ -f "${APP_HYPERSWITCH_DIR}/gateway/nginx.conf" ]; then
   cp -f "${APP_HYPERSWITCH_DIR}/gateway/nginx.conf" "${APP_HYPERSWITCH_DATA_ROOT}/gateway/nginx.conf" 2>/dev/null || true
@@ -66,12 +72,17 @@ if [ -f "${APP_HYPERSWITCH_DIR}/config/docker_compose.toml" ]; then
 fi
 
 # Provision scripts
-for _script in seed_superposition.sh create_default_user.sh; do
+for _script in seed_superposition.sh create_default_user.sh run_migrations.sh; do
   if [ -f "${APP_HYPERSWITCH_DIR}/scripts/${_script}" ]; then
     cp -f "${APP_HYPERSWITCH_DIR}/scripts/${_script}" "${APP_HYPERSWITCH_DATA_ROOT}/scripts/${_script}" 2>/dev/null || true
     chmod 0755 "${APP_HYPERSWITCH_DATA_ROOT}/scripts/${_script}" 2>/dev/null || true
   fi
 done
+
+# Provision migrations archive
+if [ -f "${APP_HYPERSWITCH_DIR}/migrations.tar.gz" ]; then
+  cp -f "${APP_HYPERSWITCH_DIR}/migrations.tar.gz" "${APP_HYPERSWITCH_DATA_ROOT}/migrations.tar.gz" 2>/dev/null || true
+fi
 
 # Extract bundled schema migrations if not already present
 if [ ! -f "${APP_HYPERSWITCH_DATA_ROOT}/migrations/diesel.toml" ] && [ -f "${APP_HYPERSWITCH_DIR}/migrations.tar.gz" ]; then

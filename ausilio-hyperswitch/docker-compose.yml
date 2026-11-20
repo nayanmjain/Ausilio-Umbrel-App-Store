@@ -96,7 +96,7 @@ services:
     volumes:
       - ${APP_HYPERSWITCH_DATA_ROOT}/config/superposition_seed.toml:/seed.toml:ro
       - ${APP_HYPERSWITCH_DATA_ROOT}/scripts/seed_superposition.sh:/seed_superposition.sh:ro
-    command: sh -c "apk add --no-cache curl jq python3 && sh /seed_superposition.sh"
+    command: ["sh", "-c", "apk add --no-cache curl jq python3 && sh /seed_superposition.sh"]
     depends_on:
       superposition:
         condition: service_started
@@ -110,16 +110,9 @@ services:
     volumes:
       - ${APP_HYPERSWITCH_DATA_ROOT}/migrations:/app
       - ${APP_HYPERSWITCH_DATA_ROOT}/bin:/root/.cargo/bin
-    command: >
-      bash -c "
-      set -e
-      if ! command -v diesel >/dev/null 2>&1 && [ ! -f /root/.cargo/bin/diesel ]; then
-        apt-get update && apt-get install -y curl xz-utils libpq5
-        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.3.5/diesel_cli-installer.sh | bash
-      fi
-      export PATH=\"/root/.cargo/bin:$${PATH}\"
-      diesel migration --database-url \"$${DATABASE_URL}\" run --migration-dir /app/migrations --config-file /app/diesel.toml
-      "
+      - ${APP_HYPERSWITCH_DATA_ROOT}/scripts/run_migrations.sh:/run_migrations.sh:ro
+      - ${APP_HYPERSWITCH_DATA_ROOT}/migrations.tar.gz:/migrations.tar.gz:ro
+    command: ["/bin/bash", "/run_migrations.sh"]
     depends_on:
       pg:
         condition: service_healthy
@@ -134,7 +127,7 @@ services:
       - PASSWORD=${APP_HYPERSWITCH_ADMIN_PASSWORD:-Hyperswitch@123}
     volumes:
       - ${APP_HYPERSWITCH_DATA_ROOT}/scripts/create_default_user.sh:/create_default_user.sh:ro
-    command: sh -c "apk add --no-cache bash curl jq && /bin/bash /create_default_user.sh"
+    command: ["sh", "-c", "apk add --no-cache bash curl jq && /bin/bash /create_default_user.sh"]
     depends_on:
       server:
         condition: service_healthy
