@@ -1,0 +1,171 @@
+services:
+  app_proxy:
+    environment:
+      APP_HOST: ausilio-hyperswitch_gateway_1
+      APP_PORT: 8080
+      PROXY_AUTH_ADD: "false"
+
+  gateway:
+    image: nginx:1.27-alpine
+    restart: on-failure
+    depends_on:
+      server:
+        condition: service_healthy
+      control-center:
+        condition: service_started
+      web-client:
+        condition: service_started
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  server:
+    image: juspaydotin/hyperswitch-router:v1.129.0-standalone
+    command: /local/bin/router -f /local/config/docker_compose.toml
+    restart: on-failure
+    environment:
+      - ROUTER__MASTER_DATABASE__USERNAME=hyperswitch
+      - ROUTER__MASTER_DATABASE__PASSWORD=${APP_HYPERSWITCH_DB_PASSWORD}
+      - ROUTER__MASTER_DATABASE__HOST=pg
+      - ROUTER__MASTER_DATABASE__PORT=5432
+      - ROUTER__MASTER_DATABASE__DBNAME=hyperswitch_db
+      - ROUTER__REDIS__HOST=redis
+      - ROUTER__REDIS__PORT=6379
+      - ROUTER__SUPERPOSITION__ENDPOINT=http://superposition:8080
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/config:/local/config:ro
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migration_runner:
+        condition: service_completed_successfully
+      superposition-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:8080/health || exit 1"]
+      interval: 5s
+      retries: 6
+      start_period: 10s
+      timeout: 5s
+
+  control-center:
+    image: juspaydotin/hyperswitch-control-center:latest
+    restart: on-failure
+    environment:
+      - configPath=/tmp/dashboard-config.toml
+      - themeConfigPath=/tmp/dashboard-theme.json
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/config/dashboard.toml:/tmp/dashboard-config.toml:ro
+      - ${APP_HYPERSWITCH_DATA_ROOT}/config/dashboard_theme.json:/tmp/dashboard-theme.json:ro
+    depends_on:
+      server:
+        condition: service_healthy
+      web-client:
+        condition: service_started
+
+  web-client:
+    image: juspaydotin/hyperswitch-web:latest
+    restart: on-failure
+    environment:
+      - ENABLE_LOGGING=false
+      - SDK_ENV=local
+      - ENV_BACKEND_URL=http://localhost:8097/api
+    depends_on:
+      server:
+        condition: service_healthy
+
+  superposition:
+    image: ghcr.io/juspay/superposition-demo:0.113.0
+    restart: on-failure
+    environment:
+      - API_HOSTNAME=http://superposition:8080
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  superposition-init:
+    image: alpine:3.20
+    restart: "no"
+    environment:
+      - SUPERPOSITION_URL=http://superposition:8080
+      - SEED_FILE=/seed.toml
+      - WORKSPACE_ID=dev
+      - ORG_ID=localorg
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/config/superposition_seed.toml:/seed.toml:ro
+      - ${APP_HYPERSWITCH_DATA_ROOT}/scripts/seed_superposition.sh:/seed_superposition.sh:ro
+    command: sh -c "apk add --no-cache curl jq python3 && sh /seed_superposition.sh"
+    depends_on:
+      superposition:
+        condition: service_started
+
+  migration_runner:
+    image: debian:trixie-slim
+    restart: "no"
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://hyperswitch:${APP_HYPERSWITCH_DB_PASSWORD}@pg:5432/hyperswitch_db
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/migrations:/app
+      - ${APP_HYPERSWITCH_DATA_ROOT}/bin:/root/.cargo/bin
+    command: >
+      bash -c "
+      set -e
+      if ! command -v diesel >/dev/null 2>&1 && [ ! -f /root/.cargo/bin/diesel ]; then
+        apt-get update && apt-get install -y curl xz-utils libpq5
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/diesel-rs/diesel/releases/download/v2.3.5/diesel_cli-installer.sh | bash
+      fi
+      export PATH=\"/root/.cargo/bin:$${PATH}\"
+      diesel migration --database-url \"$${DATABASE_URL}\" run --migration-dir /app/migrations --config-file /app/diesel.toml
+      "
+    depends_on:
+      pg:
+        condition: service_healthy
+
+  create-default-user:
+    image: alpine:3.20
+    restart: "no"
+    environment:
+      - HYPERSWITCH_SERVER_URL=http://server:8080
+      - HYPERSWITCH_CONTROL_CENTER_URL=http://control-center:9000
+      - EMAIL=${APP_HYPERSWITCH_ADMIN_EMAIL:-admin@hyperswitch.local}
+      - PASSWORD=${APP_HYPERSWITCH_ADMIN_PASSWORD:-Hyperswitch@123}
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/scripts/create_default_user.sh:/create_default_user.sh:ro
+    command: sh -c "apk add --no-cache bash curl jq && /bin/bash /create_default_user.sh"
+    depends_on:
+      server:
+        condition: service_healthy
+      control-center:
+        condition: service_started
+
+  pg:
+    image: postgres:16-alpine
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=hyperswitch
+      - POSTGRES_PASSWORD=${APP_HYPERSWITCH_DB_PASSWORD}
+      - POSTGRES_DB=hyperswitch_db
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+
+  redis:
+    image: redis:7-alpine
+    restart: on-failure
+    command: redis-server --appendonly yes
+    volumes:
+      - ${APP_HYPERSWITCH_DATA_ROOT}/redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q '^PONG$$'"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 5s

@@ -21,6 +21,7 @@ Community Umbrel app store (`id: ausilio`).
 | CRM (`ausilio-crm`) | 1.16.0 | 8094 | productivity |
 | OneGlanse (`ausilio-oneglanse`) | 0.1.0 | 8095 | marketing-technology |
 | Elmo (`ausilio-elmo`) | 0.7.7 | 8096 | marketing-technology |
+| Hyperswitch (`ausilio-hyperswitch`) | 1.129.0 | 8097 | finance |
 
 ## Notes
 
@@ -175,6 +176,23 @@ Community Umbrel app store (`id: ausilio`).
   restricted to it). First browser signup claims the instance; no SMTP, so
   there is no email verification or password reset. Telemetry is disabled.
   Needs 2GB+ RAM.
+
+- Hyperswitch (`ausilio-hyperswitch`) is Juspay's open-source payment switch and
+  orchestrator (Rust router core, Control Center dashboard, Web SDK, Superposition
+  config engine, Postgres 16, Redis 7) on port 8097. All services are unified
+  behind an internal Nginx reverse gateway (`app_proxy` -> `gateway:8080`),
+  routing dashboard traffic at `/`, REST API calls at `/api/` (as well as direct
+  endpoints `/health`, `/payments`, `/refunds`, `/webhooks`), and Web SDK assets
+  at `/sdk/HyperLoader.js`. Postgres migrations (565 pinned Diesel migrations
+  for v1.129.0) are pre-bundled in `migrations.tar.gz` (120 KB), so first-run
+  setup runs completely offline without cloning the 500MB git repository.
+  Superposition configuration is seeded automatically on start.
+  `exports.sh` derives deterministic secrets from the Umbrel seed:
+  `APP_HYPERSWITCH_DB_PASSWORD` and `APP_HYPERSWITCH_ADMIN_PASSWORD` (meeting
+  Hyperswitch's complexity rules). The initial setup creates the default admin
+  user (`admin@hyperswitch.local` or customized in `config.env`) and an initial
+  test PayPal connector. Credentials and database parameters are saved to
+  `~/umbrel/app-data/ausilio-hyperswitch/exports.env`. Needs 2GB+ RAM.
 
 ## Validation
 

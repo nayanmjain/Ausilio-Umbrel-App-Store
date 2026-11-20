@@ -1,0 +1,37 @@
+manifestVersion: 1
+id: ausilio-hyperswitch
+name: Hyperswitch
+category: finance
+version: "1.129.0"
+tagline: Open-source payments orchestrator
+description: >-
+  Hyperswitch is a high-performance open-source payment switch and orchestrator
+  developed in Rust by Juspay. It enables businesses to connect with 50+ payment
+  processors and alternative payment methods (Stripe, PayPal, Adyen, Wise,
+  Apple Pay, Google Pay, and more) through a single unified API, routing engine,
+  and dashboard.
+
+  Features:
+  - Smart routing across payment gateways to maximize authorization rates and reduce transaction costs.
+  - Built-in unified Control Center dashboard to manage connectors, routing rules, analytics, and disputes.
+  - Web client and SDK support with drop-in checkout loader (HyperLoader.js).
+  - Out-of-the-box support for cards, wallets, bank redirects, and local payment methods.
+  - Multi-tenant and modular architecture with zero external lock-in.
+
+  The complete self-hosted stack runs locally on your Umbrel: Rust router core,
+  Control Center dashboard, Web SDK, Superposition dynamic configuration engine,
+  PostgreSQL 16, and Redis 7 behind a unified gateway on port 8097.
+
+  Default admin credentials and database settings are derived deterministically
+  and saved to ~/umbrel/app-data/ausilio-hyperswitch/exports.env upon installation.
+developer: Juspay Technologies
+website: https://hyperswitch.io
+dependencies: []
+repo: https://github.com/juspay/hyperswitch
+support: https://github.com/juspay/hyperswitch/issues
+port: 8097
+icon: https://cdn.jsdelivr.net/gh/juspay/hyperswitch-control-center@6d26f8b0a13bc9cd25d692dd97d1c860dc7a475a/public/hyperswitch/HyperswitchFavicon.png
+path: ""
+defaultWithApp: []
+submitter: Ausilio
+submissionDate: "2026-11-20"
